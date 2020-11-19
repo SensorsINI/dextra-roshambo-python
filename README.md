@@ -24,7 +24,7 @@ Project includes pycharm .idea files.
 Install them to a new conda env with pip install -f requirements.txt from the conda prompt.
 
 ```
-pip install opencv-python tensorflow keras pyserial pyaer engineering_notation matplotlib sklearn flopco-keras
+pip install opencv-python tensorflow keras pyserial pyaer engineering_notation matplotlib 
 ```
 ### pyaer
 pyaer needs https://github.com/inivation/libcaer. Clone it, then follow instructions in its README to install libcaer. 

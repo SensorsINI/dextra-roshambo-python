@@ -5,8 +5,5 @@ numpy
 pyserial
 pyaer # needs libcaer; see https://github.com/duguyue100/pyaer
 engineering_notation
-matplotlib
-sklearn
-flopco-keras # may need a fork and edit to line 14 of setup.py to change pip.req to pip.requirements
 torch
 engineeringformat
