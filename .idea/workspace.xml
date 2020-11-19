@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="update README from trixy README.md">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JupyterTrust" id="f7ab21b0-251c-4fac-b8f1-a1d6f057eaec" />
+  <component name="ProjectId" id="1kW0LnzZhOcEJZFCHIhYVATvmv2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/consumer.py" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RunManager" selected="Python.consumer">
+    <list>
+      <item itemvalue="Python.producer" />
+      <item itemvalue="Python.consumer" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="" />
+      <created>1605800987121</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1605800987121</updated>
+      <workItem from="1605800988200" duration="44000" />
+      <workItem from="1605801077081" duration="1315000" />
+    </task>
+    <task id="LOCAL-00001" summary="initial commit of everything">
+      <created>1605801253119</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1605801253119</updated>
+    </task>
+    <task id="LOCAL-00002" summary="update README.md">
+      <created>1605801369493</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1605801369493</updated>
+    </task>
+    <task id="LOCAL-00003" summary="update README.md">
+      <created>1605801490371</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1605801490371</updated>
+    </task>
+    <task id="LOCAL-00004" summary="added project files for pycharm and run targets for producer/consumer">
+      <created>1605801583552</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1605801583552</updated>
+    </task>
+    <task id="LOCAL-00005" summary="update README from trixy README.md">
+      <created>1605802062434</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1605802062434</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="initial commit of everything" />
+    <MESSAGE value="update README.md" />
+    <MESSAGE value="added project files for pycharm and run targets for producer/consumer" />
+    <MESSAGE value="update README from trixy README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="update README from trixy README.md" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1143" y="421" width="1084" height="732" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1605801539556">
+      <screen x="67" y="27" width="3373" height="1413" />
+    </state>
+    <state x="1143" y="421" width="1084" height="732" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801539556" />
+    <state x="1468" y="521" width="424" height="484" key="FileChooserDialogImpl" timestamp="1605801522076">
+      <screen x="67" y="27" width="3373" height="1413" />
+    </state>
+    <state x="1468" y="521" width="424" height="484" key="FileChooserDialogImpl/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801522076" />
+    <state x="1539" y="292" key="SettingsEditor" timestamp="1605801091032">
+      <screen x="67" y="27" width="3373" height="1413" />
+    </state>
+    <state x="1539" y="292" key="SettingsEditor/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801091032" />
+    <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1605802066271">
+      <screen x="67" y="27" width="3373" height="1413" />
+    </state>
+    <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605802066271" />
+  </component>
+</project>
