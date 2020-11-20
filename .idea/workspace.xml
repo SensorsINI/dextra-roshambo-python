@@ -10,9 +10,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="update README from trixy README.md">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+    <list default="true" id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="add workspace (not sure what it does, part of pycharm)">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/davis346_config.json" beforeDir="false" afterPath="$PROJECT_DIR$/configs/davis346_config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/consumer.py" beforeDir="false" afterPath="$PROJECT_DIR$/consumer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/dextra_roshambo.tflite" beforeDir="false" afterPath="$PROJECT_DIR$/model/dextra_roshambo.tflite" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/saved_model.pb" beforeDir="false" afterPath="$PROJECT_DIR$/model/saved_model.pb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/variables/variables.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/model/variables/variables.data-00000-of-00001" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/variables/variables.index" beforeDir="false" afterPath="$PROJECT_DIR$/model/variables/variables.index" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,6 +37,12 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/consumer.py" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.consumer">
@@ -49,7 +60,8 @@
       <option name="presentableId" value="Default" />
       <updated>1605800987121</updated>
       <workItem from="1605800988200" duration="44000" />
-      <workItem from="1605801077081" duration="1315000" />
+      <workItem from="1605801077081" duration="2041000" />
+      <workItem from="1605871816149" duration="754000" />
     </task>
     <task id="LOCAL-00001" summary="initial commit of everything">
       <created>1605801253119</created>
@@ -86,7 +98,21 @@
       <option name="project" value="LOCAL" />
       <updated>1605802062434</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="update requirements.txt for actual needs and README.md">
+      <created>1605802405894</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1605802405894</updated>
+    </task>
+    <task id="LOCAL-00007" summary="add workspace (not sure what it does, part of pycharm)">
+      <created>1605802515505</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1605802515505</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -109,7 +135,9 @@
     <MESSAGE value="update README.md" />
     <MESSAGE value="added project files for pycharm and run targets for producer/consumer" />
     <MESSAGE value="update README from trixy README.md" />
-    <option name="LAST_COMMIT_MESSAGE" value="update README from trixy README.md" />
+    <MESSAGE value="update requirements.txt for actual needs and README.md" />
+    <MESSAGE value="add workspace (not sure what it does, part of pycharm)" />
+    <option name="LAST_COMMIT_MESSAGE" value="add workspace (not sure what it does, part of pycharm)" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1143" y="421" width="1084" height="732" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1605801539556">
@@ -124,9 +152,13 @@
       <screen x="67" y="27" width="3373" height="1413" />
     </state>
     <state x="1539" y="292" key="SettingsEditor/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801091032" />
-    <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1605802066271">
+    <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2" timestamp="1605802519528">
       <screen x="67" y="27" width="3373" height="1413" />
     </state>
-    <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605802066271" />
+    <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605802519528" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/dextra_roshambo_python$consumer.coverage" NAME="consumer Coverage Results" MODIFIED="1605872346259" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dextra_roshambo_python$producer.coverage" NAME="producer Coverage Results" MODIFIED="1605872291189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

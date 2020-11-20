@@ -43,7 +43,7 @@ def classify_img(img: np.array, interpreter, input_details, output_details):
 
     :returns: symbol ('background' 'rock','scissors', 'paper'), class number (0-3), softmax output vector [4]
     """
-    interpreter.set_tensor(input_details[0]['index'], np.array(np.reshape(img, [1, IMSIZE, IMSIZE, 1]), dtype=np.float32))
+    interpreter.set_tensor(input_details[0]['index'], (1/255.)*np.array(np.reshape(img, [1, IMSIZE, IMSIZE, 1]), dtype=np.float32))
     interpreter.invoke()
     pred_vector = interpreter.get_tensor(output_details[0]['index'])[0]
     pred_idx=np.argmax(np.array(pred_vector))
