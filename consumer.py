@@ -1,6 +1,6 @@
 """
-consumer of DVS frames for classification of joker/nonjoker by consumer processs
-Authors: Tobi Delbruck, Shasha Guo, Yuhaung Hu, Min Liu, Oct 2020
+consumer of DVS frames for classification of DVS frames
+Authors: Tobi Delbruck, Nov 2020
 """
 import argparse
 import copy
@@ -24,7 +24,7 @@ from pathlib import Path
 import random
 
 from tensorflow.python.keras.models import load_model, Model
-
+from Quantizer import apply_quantization
 log=my_logger(__name__)
 
 # Only used in mac osx
@@ -43,7 +43,7 @@ def classify_img(img: np.array, interpreter, input_details, output_details):
 
     :returns: symbol ('background' 'rock','scissors', 'paper'), class number (0-3), softmax output vector [4]
     """
-    interpreter.set_tensor(input_details[0]['index'], (1/255.)*np.array(np.reshape(img, [1, IMSIZE, IMSIZE, 1]), dtype=np.float32))
+    interpreter.set_tensor(input_details[0]['index'], (1/256.)*np.array(np.reshape(img, [1, IMSIZE, IMSIZE, 1]), dtype=np.float32))
     interpreter.invoke()
     pred_vector = interpreter.get_tensor(output_details[0]['index'])[0]
     pred_idx=np.argmax(np.array(pred_vector))
@@ -62,7 +62,8 @@ def load_latest_model_convert_to_tflite():
         num_3x3_blocks=3,
         )
     model = Model(inputs=input_tensor, outputs=x, name='roshambo')
-
+    model=apply_quantization(model, pruning_policy=None, weight_precision=16, activation_precision=16,
+                       activation_margin=None)
     model.load_weights(os.path.join(MODEL_DIR, MODEL_BASE_NAME))
     print(f'model.input_shape: {model.input_shape}')
     model.save(MODEL_DIR)

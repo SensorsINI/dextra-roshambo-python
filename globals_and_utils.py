@@ -21,7 +21,7 @@ IMSIZE = 64  # input image size, must match model
 UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / math.log(2))))
 
 EVENT_COUNT_PER_FRAME = 5000  # events per frame
-EVENT_COUNT_CLIP_VALUE = 3  # full count value for colleting histograms of DVS events
+EVENT_COUNT_CLIP_VALUE = 16  # full count value for colleting histograms of DVS events
 SHOW_DVS_OUTPUT = True # producer shows the accumulated DVS frames as aid for focus and alignment
 MIN_PRODUCER_FRAME_INTERVAL_MS=5.0 # inference takes about 3ms and normalization takes 1ms, hence at least 2ms
         # limit rate that we send frames to about what the GPU can manage for inference time

@@ -10,14 +10,90 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="add workspace (not sure what it does, part of pycharm)">
+    <list default="true" id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="latest state of project, fixed Davis config to turn on noise filter, added back in the 1/255 scaling of uint8 images. Output is still just 0.25,0.25...">
+      <change afterPath="$PROJECT_DIR$/Quantizer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/api/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/api/quantization/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/api/quantization/keras/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/api/quantization/keras/quantizers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/api/sparsity/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/api/sparsity/keras/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/keras/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/keras/cluster.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/keras/cluster_wrapper.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/keras/clusterable_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/keras/clustering_centroids.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/clustering/keras/clustering_registry.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/core/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/core/core_encoder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/core/encoding_stage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/core/gather_encoder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/core/simple_encoder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/encoders/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/encoders/common_encoders.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/research/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/research/clipping.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/research/kashin.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/research/misc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/research/quantization.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/stages/stages_impl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/testing/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/testing/test_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/utils/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/utils/py_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/internal/tensor_encoding/utils/tf_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/keras/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/keras/compat.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_configs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_layout_transform.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantizers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_transforms.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/graph_transformations/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/graph_transformations/model_transformer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/graph_transformations/transforms.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/layers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/layers/conv_batchnorm.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quant_ops.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_annotate.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_aware_activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_layout_transform.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_registry.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantize_wrapper.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/quantization/keras/quantizers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/prunable_layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/prune.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/prune_registry.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/pruning_callbacks.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/pruning_impl.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/pruning_schedule.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/pruning_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/sparsity/keras/pruning_wrapper.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tensorflow_model_optimization/python/core/version.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/configs/davis346_config.json" beforeDir="false" afterPath="$PROJECT_DIR$/configs/davis346_config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/consumer.py" beforeDir="false" afterPath="$PROJECT_DIR$/consumer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/globals_and_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/globals_and_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/dextra_roshambo.tflite" beforeDir="false" afterPath="$PROJECT_DIR$/model/dextra_roshambo.tflite" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/saved_model.pb" beforeDir="false" afterPath="$PROJECT_DIR$/model/saved_model.pb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/variables/variables.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/model/variables/variables.data-00000-of-00001" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/variables/variables.index" beforeDir="false" afterPath="$PROJECT_DIR$/model/variables/variables.index" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/producer.py" beforeDir="false" afterPath="$PROJECT_DIR$/producer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +112,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/consumer.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -44,6 +120,11 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
   </component>
   <component name="RunManager" selected="Python.consumer">
     <list>
@@ -61,7 +142,8 @@
       <updated>1605800987121</updated>
       <workItem from="1605800988200" duration="44000" />
       <workItem from="1605801077081" duration="2041000" />
-      <workItem from="1605871816149" duration="754000" />
+      <workItem from="1605871816149" duration="4523000" />
+      <workItem from="1605877718240" duration="1070000" />
     </task>
     <task id="LOCAL-00001" summary="initial commit of everything">
       <created>1605801253119</created>
@@ -112,7 +194,14 @@
       <option name="project" value="LOCAL" />
       <updated>1605802515505</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="latest state of project, fixed Davis config to turn on noise filter, added back in the 1/255 scaling of uint8 images. Output is still just 0.25,0.25...">
+      <created>1605872616386</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1605872616387</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -137,17 +226,63 @@
     <MESSAGE value="update README from trixy README.md" />
     <MESSAGE value="update requirements.txt for actual needs and README.md" />
     <MESSAGE value="add workspace (not sure what it does, part of pycharm)" />
-    <option name="LAST_COMMIT_MESSAGE" value="add workspace (not sure what it does, part of pycharm)" />
+    <MESSAGE value="latest state of project, fixed Davis config to turn on noise filter, added back in the 1/255 scaling of uint8 images. Output is still just 0.25,0.25..." />
+    <option name="LAST_COMMIT_MESSAGE" value="latest state of project, fixed Davis config to turn on noise filter, added back in the 1/255 scaling of uint8 images. Output is still just 0.25,0.25..." />
   </component>
   <component name="WindowStateProjectService">
     <state x="1143" y="421" width="1084" height="732" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1605801539556">
       <screen x="67" y="27" width="3373" height="1413" />
     </state>
     <state x="1143" y="421" width="1084" height="732" key="#com.intellij.execution.impl.EditConfigurationsDialog/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801539556" />
+    <state x="4442" y="278" width="896" height="510" key="#xdebugger.evaluate" timestamp="1605875769403">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state x="4442" y="278" width="896" height="510" key="#xdebugger.evaluate/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605875769403" />
+    <state x="1828" y="354" key="#xdebugger.evaluate/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605872833201" />
     <state x="1468" y="521" width="424" height="484" key="FileChooserDialogImpl" timestamp="1605801522076">
       <screen x="67" y="27" width="3373" height="1413" />
     </state>
     <state x="1468" y="521" width="424" height="484" key="FileChooserDialogImpl/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801522076" />
+    <state width="1874" height="201" key="GridCell.Tab.0.bottom" timestamp="1605877707731">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="201" key="GridCell.Tab.0.bottom/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707731" />
+    <state width="1784" height="402" key="GridCell.Tab.0.bottom/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491665" />
+    <state width="1874" height="201" key="GridCell.Tab.0.center" timestamp="1605877707731">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="201" key="GridCell.Tab.0.center/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707731" />
+    <state width="1784" height="402" key="GridCell.Tab.0.center/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491665" />
+    <state width="1874" height="201" key="GridCell.Tab.0.left" timestamp="1605877707731">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="201" key="GridCell.Tab.0.left/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707731" />
+    <state width="1784" height="402" key="GridCell.Tab.0.left/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491664" />
+    <state width="1874" height="201" key="GridCell.Tab.0.right" timestamp="1605877707731">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="201" key="GridCell.Tab.0.right/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707731" />
+    <state width="1784" height="402" key="GridCell.Tab.0.right/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491665" />
+    <state width="1874" height="324" key="GridCell.Tab.1.bottom" timestamp="1605877707729">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="324" key="GridCell.Tab.1.bottom/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707729" />
+    <state width="1784" height="402" key="GridCell.Tab.1.bottom/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605872749216" />
+    <state width="1874" height="324" key="GridCell.Tab.1.center" timestamp="1605877707729">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="324" key="GridCell.Tab.1.center/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707729" />
+    <state width="1784" height="402" key="GridCell.Tab.1.center/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605872749216" />
+    <state width="1874" height="324" key="GridCell.Tab.1.left" timestamp="1605877707729">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="324" key="GridCell.Tab.1.left/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707729" />
+    <state width="1784" height="402" key="GridCell.Tab.1.left/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605872749216" />
+    <state width="1874" height="324" key="GridCell.Tab.1.right" timestamp="1605877707729">
+      <screen x="3440" y="0" width="1920" height="1200" />
+    </state>
+    <state width="1874" height="324" key="GridCell.Tab.1.right/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1605877707729" />
+    <state width="1784" height="402" key="GridCell.Tab.1.right/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605872749216" />
     <state x="1539" y="292" key="SettingsEditor" timestamp="1605801091032">
       <screen x="67" y="27" width="3373" height="1413" />
     </state>
@@ -157,8 +292,24 @@
     </state>
     <state x="1280" y="499" width="800" height="528" key="Vcs.Push.Dialog.v2/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605802519528" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/consumer.py</url>
+          <line>45</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/consumer.py</url>
+          <line>64</line>
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/dextra_roshambo_python$consumer.coverage" NAME="consumer Coverage Results" MODIFIED="1605872346259" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/dextra_roshambo_python$producer.coverage" NAME="producer Coverage Results" MODIFIED="1605872291189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dextra_roshambo_python$consumer.coverage" NAME="consumer Coverage Results" MODIFIED="1605878045033" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dextra_roshambo_python$producer.coverage" NAME="producer Coverage Results" MODIFIED="1605876072539" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
