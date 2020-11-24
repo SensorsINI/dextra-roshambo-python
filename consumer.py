@@ -26,6 +26,7 @@ import random
 from tensorflow.python.keras.models import load_model, Model
 from Quantizer import apply_quantization
 log=my_logger(__name__)
+from numpy_loader import load_from_numpy
 
 # Only used in mac osx
 try:
@@ -62,9 +63,10 @@ def load_latest_model_convert_to_tflite():
         num_3x3_blocks=3,
         )
     model = Model(inputs=input_tensor, outputs=x, name='roshambo')
-    model=apply_quantization(model, pruning_policy=None, weight_precision=16, activation_precision=16,
-                       activation_margin=None)
-    model.load_weights(os.path.join(MODEL_DIR, MODEL_BASE_NAME))
+    # model=apply_quantization(model, pruning_policy=None, weight_precision=16, activation_precision=16,
+    #                    activation_margin=None)
+    # model.load_weights(os.path.join(MODEL_DIR, MODEL_BASE_NAME))
+    load_from_numpy(model,'model/numpy_weights')
     print(f'model.input_shape: {model.input_shape}')
     model.save(MODEL_DIR)
     log.info('converting model to tensorflow lite model')
