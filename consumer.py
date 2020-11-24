@@ -187,7 +187,7 @@ if __name__ == '__main__':
 
 
     last_frame_number=0
-    # receive_data=bytearray(UDP_BUFFER_SIZE)
+    cv2_resized=False
     while True:
         timestr = time.strftime("%Y%m%d-%H%M")
         with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
@@ -221,7 +221,19 @@ if __name__ == '__main__':
             if pred_idx<=3: # symbol
                 arduino_serial_port.write(pred_idx)
 
-            print(f'{pred_class_name} pred_vector=({pred_vector[0]:.2f},{pred_vector[1]:.2f},{pred_vector[2]:.2f},{pred_vector[3]:.2f})')
+            cv2.putText(img, pred_class_name, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+
+            cv2.namedWindow('RoshamboCNN', cv2.WINDOW_NORMAL)
+            cv2.imshow('RoshamboCNN', 1 - img.astype('float') / 255)
+            if not cv2_resized:
+                cv2.resizeWindow('RoshamboCNN', 600, 600)
+                cv2_resized = True
+            k = cv2.waitKey(1) & 0xFF
+            if k == ord('q') or k==ord('x'):
+                break
+            elif k == ord('p'):
+                print_timing_info()
+
             # save time since frame sent from producer
             dt=time.time()-timestamp
             with Timer('producer->consumer inference delay',delay=dt, show_hist=True):

@@ -11,31 +11,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c2bc6dcc-530c-4aed-94f5-c0a478fbad32" name="Default Changelist" comment="added alessandro's customized tensorflow quantization library that fixes some bugs, in particular &quot; created this flag, it is simply there to prevent the program to run without the right version of tensorflow model optimization library&#10;&#10;because the default one has a set of bugs. that flag is set by me - it reminds me that the person that did the quantization base framework in keras added a normalization layer that is undocumented and that must be removed manually from the library sourcecode&quot;">
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer1_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer1_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer1_shifts.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer2_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer2_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer2_shifts.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer3_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer3_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer3_shifts.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer4_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer4_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer4_shifts.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer5_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer5_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer5_shifts.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer6_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer6_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/layer6_shifts.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/shift_per_layer_activation.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/shift_per_layer_bias.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/numpy_weights/shift_per_layer_kernel.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/numpy_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/consumer.py" beforeDir="false" afterPath="$PROJECT_DIR$/consumer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/dextra_roshambo.tflite" beforeDir="false" afterPath="$PROJECT_DIR$/model/dextra_roshambo.tflite" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/globals_and_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/globals_and_utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/saved_model.pb" beforeDir="false" afterPath="$PROJECT_DIR$/model/saved_model.pb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/variables/variables.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/model/variables/variables.data-00000-of-00001" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/variables/variables.index" beforeDir="false" afterPath="$PROJECT_DIR$/model/variables/variables.index" afterDir="false" />
@@ -91,6 +68,7 @@
       <workItem from="1605871816149" duration="4523000" />
       <workItem from="1605877718240" duration="1150000" />
       <workItem from="1606219887889" duration="1648000" />
+      <workItem from="1606222826822" duration="653000" />
     </task>
     <task id="LOCAL-00001" summary="initial commit of everything">
       <created>1605801253119</created>
@@ -198,25 +176,25 @@
       <screen x="67" y="27" width="3373" height="1413" />
     </state>
     <state x="1468" y="521" width="424" height="484" key="FileChooserDialogImpl/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605801522076" />
-    <state width="1874" height="314" key="GridCell.Tab.0.bottom" timestamp="1606221496996">
+    <state width="1874" height="314" key="GridCell.Tab.0.bottom" timestamp="1606222878082">
       <screen x="3440" y="0" width="1920" height="1200" />
     </state>
-    <state width="1874" height="314" key="GridCell.Tab.0.bottom/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606221496996" />
+    <state width="1874" height="314" key="GridCell.Tab.0.bottom/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606222878082" />
     <state width="1784" height="402" key="GridCell.Tab.0.bottom/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491665" />
-    <state width="1874" height="314" key="GridCell.Tab.0.center" timestamp="1606221496996">
+    <state width="1874" height="314" key="GridCell.Tab.0.center" timestamp="1606222878082">
       <screen x="3440" y="0" width="1920" height="1200" />
     </state>
-    <state width="1874" height="314" key="GridCell.Tab.0.center/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606221496996" />
+    <state width="1874" height="314" key="GridCell.Tab.0.center/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606222878082" />
     <state width="1784" height="402" key="GridCell.Tab.0.center/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491665" />
-    <state width="1874" height="314" key="GridCell.Tab.0.left" timestamp="1606221496995">
+    <state width="1874" height="314" key="GridCell.Tab.0.left" timestamp="1606222878082">
       <screen x="3440" y="0" width="1920" height="1200" />
     </state>
-    <state width="1874" height="314" key="GridCell.Tab.0.left/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606221496995" />
+    <state width="1874" height="314" key="GridCell.Tab.0.left/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606222878082" />
     <state width="1784" height="402" key="GridCell.Tab.0.left/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491664" />
-    <state width="1874" height="314" key="GridCell.Tab.0.right" timestamp="1606221496996">
+    <state width="1874" height="314" key="GridCell.Tab.0.right" timestamp="1606222878082">
       <screen x="3440" y="0" width="1920" height="1200" />
     </state>
-    <state width="1874" height="314" key="GridCell.Tab.0.right/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606221496996" />
+    <state width="1874" height="314" key="GridCell.Tab.0.right/67.27.3373.1413/3440.0.1920.1200@3440.0.1920.1200" timestamp="1606222878082" />
     <state width="1784" height="402" key="GridCell.Tab.0.right/67.27.3373.1413/3440.0.1920.1200@67.27.3373.1413" timestamp="1605873491665" />
     <state width="1874" height="324" key="GridCell.Tab.1.bottom" timestamp="1606221458481">
       <screen x="3440" y="0" width="1920" height="1200" />
@@ -260,7 +238,7 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/dextra_roshambo_python$consumer.coverage" NAME="consumer Coverage Results" MODIFIED="1606221496986" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/dextra_roshambo_python$producer.coverage" NAME="producer Coverage Results" MODIFIED="1606221481983" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dextra_roshambo_python$consumer.coverage" NAME="consumer Coverage Results" MODIFIED="1606222878067" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/dextra_roshambo_python$producer.coverage" NAME="producer Coverage Results" MODIFIED="1606222864911" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

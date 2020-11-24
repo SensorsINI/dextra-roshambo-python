@@ -28,12 +28,9 @@ MIN_PRODUCER_FRAME_INTERVAL_MS=5.0 # inference takes about 3ms and normalization
         # after we collect sufficient events, we don't bother to normalize and send them unless this time has
         # passed since last frame was sent. That way, we make sure not to flood the consumer
 MAX_SHOWN_DVS_FRAME_RATE_HZ=15 # limits cv2 rendering of DVS frames to reduce loop latency for the producer
-FINGER_OUT_TIME_S = 2  # time to hold out finger when joker is detected
 
 DATA_FOLDER = '/home/tobi/Downloads/dextra_roshambo/data' #'data'  # new samples stored here
 NUM_NON_JOKER_IMAGES_TO_SAVE_PER_JOKER = 3 # when joker detected by consumer, this many random previous nonjoker frames are also saved
-JOKERS_FOLDER = DATA_FOLDER + '/jokers'  # where samples are saved during runtime of consumer
-NONJOKERS_FOLDER = DATA_FOLDER + '/nonjokers'
 SERIAL_PORT = "/dev/ttyUSB0"  # port to talk to arduino finger controller
 
 LOG_DIR='logs'
