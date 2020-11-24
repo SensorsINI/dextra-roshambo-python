@@ -42,7 +42,7 @@ MODEL_DIR='model' # where models stored
 MODEL_BASE_NAME= 'model_185' # base name of checkpoint .index and .data files in the MODEL_DIR
 DEXTRA_NET_BASE_NAME= 'dextra_roshambo' # base name
 TFLITE_FILE_NAME= DEXTRA_NET_BASE_NAME + '.tflite' # tflite model is stored in same folder as full-blown TF2 model
-CLASS_DICT={'background':3, 'rock':0, 'scissors': 1, 'paper':2}
+CLASS_DICT={'background':3, 'paper':0, 'scissors': 1, 'rock':2}
 
 import signal
 def alarm_handler(signum, frame):
