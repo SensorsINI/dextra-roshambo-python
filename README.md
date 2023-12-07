@@ -5,7 +5,7 @@ The pretrained network is a 16-bit quantized weight and state CNN.
 ## Requirements
 
  - OS: Fully tested on Ubuntu 18.04 and 22.04
-  * Python 3.9
+  * Python 3.9 **Important, necessary for Tensorflow 2.5.0 required to run the roshambo CNN**
   * Tensorflow 2.5.0
   * CUDA 10.2+ or whatever comes with tensorflow install
     - Keras: 2.5.0
@@ -22,8 +22,8 @@ Project includes pycharm _.idea/_ folder and vscode _.vscode/_ folder.
 1. *Install libcaer.* Can be installed with  sudo apt-get install libcaer-dev, otherewise see https://gitlab.com/inivation/dv/libcaer.
 
 ### Make a conda environment
-Create the environment, activate it, then in it install the libraries. We recommend you use conda because you will need to use python version 3.9 because that
-is the last version to have tensorflow 2.5.0 which this project uses.
+Create the environment, activate it, then in it install the libraries. We recommend you use conda because it will download the necessary python version 3.9. (That
+is the last python version to have tensorflow 2.5.0 which this project uses.) 
 ``` bash
 conda create -n roshambo python=3.9
 conda activate roshambo
