@@ -183,7 +183,8 @@ def consumer(queue:Queue):
     cv2_resized=False
     while True:
         timestr = time.strftime("%Y%m%d-%H%M")
-        with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
+        # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
+        with Timer('overall consumer loop', numpy_file=None, show_hist=True):
             with Timer('recieve UDP'):
                 receive_data = server_socket.recv(UDP_BUFFER_SIZE)
 

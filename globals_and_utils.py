@@ -29,7 +29,7 @@ MIN_PRODUCER_FRAME_INTERVAL_MS=5.0 # inference takes about 3ms and normalization
         # passed since last frame was sent. That way, we make sure not to flood the consumer
 MAX_SHOWN_DVS_FRAME_RATE_HZ=15 # limits cv2 rendering of DVS frames to reduce loop latency for the producer
 
-DATA_FOLDER = '/home/tobi/Downloads/dextra_roshambo/data' #'data'  # new samples stored here
+DATA_FOLDER = 'data' #'data'  # new samples stored here
 NUM_NON_JOKER_IMAGES_TO_SAVE_PER_JOKER = 3 # when joker detected by consumer, this many random previous nonjoker frames are also saved
 SERIAL_PORT = "/dev/ttyUSB0"  # port to talk to arduino finger controller
 

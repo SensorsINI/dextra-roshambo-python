@@ -37,8 +37,8 @@ def producer(queue:Queue):
 
 
 
-    record=args.record
-    spacebar_records=args.spacebar_records
+    record=None
+    spacebar_records=True
     log.info(f'recording to {record} with spacebar_records={spacebar_records}')
 
     recording_folder = None
@@ -48,7 +48,7 @@ def producer(queue:Queue):
         Path(recording_folder).mkdir(parents=True, exist_ok=True)
 
     def open_camera():
-        """ Opens the camera and returns handle to it
+        """ Opens the DAVIS camera, set biases, and returns device handle to it
         :return: device handle
         """
         device = DAVIS(noise_filter=True)
@@ -89,6 +89,7 @@ def producer(queue:Queue):
 
         # setting bias after data stream started
         device.set_bias_from_json("./configs/davis346_config.json")
+        return device
 
     dvs=None
     while dvs is None:
@@ -120,7 +121,7 @@ def producer(queue:Queue):
 
     try:
         timestr = time.strftime("%Y%m%d-%H%M")
-        numpy_file = f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
+        numpy_file = None # TODO uncomment to save data f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
         while True:
 
             with Timer('overall producer frame rate', numpy_file=numpy_file , show_hist=True) as timer_overall:
