@@ -1,11 +1,11 @@
-keras
-tensorflow==2.5.0
-opencv-python
 numpy
 matplotlib
 pyserial
 engineering_notation
-torch
 pyyaml
+opencv-python
+# torch
+keras
+tensorflow==2.5.0
 tensorflow-model-optimization # pip install --user --upgrade
 pyaer # needs libcaer; see https://github.com/duguyue100/pyaer
