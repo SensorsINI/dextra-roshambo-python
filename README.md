@@ -1,33 +1,33 @@
-The Dextra robot redone in python using pyaer and tensorflow.
+The Dextra rock-scissor-paper robot redone in python using pyaer and tensorflow.
 
 The pretrained network is a 16-bit quantized weight and state CNN.
 
 ## Requirements
 
- - OS: Fully tested on Ubuntu 18.04
+ - OS: Fully tested on Ubuntu 18.04 and 22.04
   * Python 3.9
- * Tensorflow 2.5.0
- * CUDA 10.2+
- - Keras: 2.5.0
- - pyaer https://github.com/duguyue100/pyaer
+  * Tensorflow 2.5.0
+  * CUDA 10.2+ or whatever comes with tensorflow install
+    - Keras: 2.5.0
+    - pyaer https://github.com/duguyue100/pyaer
  
- * sensors DVS camera
- * Robot hand with Arduino control via USB serial port bytes
+ * sensors DAVIS camera
+ * Robot hand with Arduino control via USB serial port bytes if you want to see the hand move; see project https://github.com/SensorsINI/DextraRoshamboHand
 
 ## Setup
 
-Project includes pycharm .idea files.
+Project includes pycharm _.idea/_ folder and vscode _.vscode/_ folder.
 
-**Make a conda environment**, activate it, then in it install the libraries.
+### System level prerequisites
+1. *Install libcaer.* Can be installed with  sudo apt-get install libcaer-dev, otherewise see https://gitlab.com/inivation/dv/libcaer.
+
+### Make a conda environment
+Create the environment, activate it, then in it install the libraries. We recommend you use conda because you will need to use python version 3.9 because that
+is the last version to have tensorflow 2.5.0 which this project uses.
 ``` bash
 conda create -n roshambo python=3.9
 conda activate roshambo
 ```
-### pyaer
-pyaer needs https://gitlab.com/inivation/dv/libcaer. 
-
-Clone it, then follow instructions in its README to install libcaer. 
-
 ### Other requirements
 See requirements.txt for libraries needed. 
 Install them to the new conda env from the conda prompt with
@@ -35,23 +35,21 @@ Install them to the new conda env from the conda prompt with
 ``` bash
 conda activate roshambo # probably already activate
 pip install -f requirements.txt
-```/
+```
 
+If you have trouble with pyaer, see https://github.com/duguyue100/pyaer
 
 # Running Dextra
 
+Run roshambo; it uses multiprocessing to launch 2 subprocessees, _producer_ and _consumer_. (You can run these separately for testing.)
+
 Run two processes, producer and consumer.
 
- 1. connect hardware: DVS to USB and Arduino to USB.
- 1. Find out which serial port device the Arduino appears on. You can use dmesg on linux. You can put the serial port into _globals_and_utils.py_ to avoid adding as argument.
- 1. In first terminal run producer
-```shell script
-python -m producer
+ 1. connect hardware: DAVIS to USB and Arduino to USB.
+ 2. Find out which serial port device the hand controller Arduino appears on. You can use dmesg on linux. You can put the serial port into _globals_and_utils.py_ to avoid adding as argument.
+ 2. In terminal run producer
+```bash
+python -m roshambo
 ```
- 2. In a second terminal, run consumer
-```shell script
-python -m consumer  arduinoPort
-example: python -m consumer.py 
-```
-
+ 
 
