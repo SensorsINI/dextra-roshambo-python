@@ -10,7 +10,7 @@ The pretrained network is a 16-bit quantized weight and state CNN.
   * CUDA 10.2+ or whatever comes with tensorflow install
     - Keras: 2.5.0
     - pyaer https://github.com/duguyue100/pyaer
- 
+
  * sensors DAVIS camera
  * Robot hand with Arduino control via USB serial port bytes if you want to see the hand move; see project https://github.com/SensorsINI/DextraRoshamboHand
 
@@ -23,13 +23,13 @@ Project includes pycharm _.idea/_ folder and vscode _.vscode/_ folder.
 
 ### Make a conda environment
 Create the environment, activate it, then in it install the libraries. We recommend you use conda because it will download the necessary python version 3.9. (That
-is the last python version to have tensorflow 2.5.0 which this project uses.) 
+is the last python version to have tensorflow 2.5.0 which this project uses.)
 ``` bash
 conda create -n roshambo python=3.9
 conda activate roshambo
 ```
 ### Other requirements
-See requirements.txt for libraries needed. 
+See requirements.txt for libraries needed.
 Install them to the new conda env from the conda prompt with
 
 ``` bash
@@ -38,6 +38,27 @@ pip install -f requirements.txt
 ```
 
 If you have trouble with pyaer, see https://github.com/duguyue100/pyaer. It should work for linux and mac OS intel silicon machines. Windows probably will not work natively, but you can run the code in a WSL2 Ubuntu virtual machine using https://github.com/dorssel/usbipd-win to map the USB port to WSL2 Ubuntu.
+
+## macOS setup with venv
+
+1. Install Homebrew (https://brew.sh)
+2. Install Python 3.9 and libcaer
+  ```sh
+  brew install python@3.9
+  brew tap inivation/inivation
+  brew install libcaer --with-opencv --with-libserialport
+  ```
+3. Create a virtual environment
+  ```sh
+  cd dextra-roshambo-python
+  python3.9 -m venv .venv
+  source .venv/bin/activate
+  ```
+4. Install the dependencies
+  ```sh
+  pip install -r requirements.txt
+  ```
+
 
 # Running Dextra
 
@@ -51,5 +72,5 @@ Run two processes, producer and consumer.
 ```bash
 python -m roshambo
 ```
- 
+
 
