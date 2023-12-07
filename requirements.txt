@@ -1,10 +1,11 @@
 keras
-tensorflow
+tensorflow==2.5.0
 opencv-python
 numpy
+matplotlib
 pyserial
-pyaer # needs libcaer; see https://github.com/duguyue100/pyaer
 engineering_notation
 torch
-engineeringformat
+pyyaml
 tensorflow-model-optimization # pip install --user --upgrade
+pyaer # needs libcaer; see https://github.com/duguyue100/pyaer

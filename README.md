@@ -5,10 +5,10 @@ The pretrained network is a 16-bit quantized weight and state CNN.
 ## Requirements
 
  - OS: Fully tested on Ubuntu 18.04
-  * Python 3.8
- * Tensorflow 2.3.1
+  * Python 3.9
+ * Tensorflow 2.5.0
  * CUDA 10.2+
- - Keras: 2.3.1
+ - Keras: 2.5.0
  - pyaer https://github.com/duguyue100/pyaer
  
  * sensors DVS camera
@@ -21,10 +21,10 @@ Project includes pycharm .idea files.
 
 **Make a conda environment**, activate it, then in it install the libraries.
 
-Install them to a new conda env with pip install -f requirements.txt from the conda prompt.
+Install them to a new conda env from the conda prompt with
 
 ```
-pip install opencv-python tensorflow keras pyserial pyaer engineering_notation matplotlib 
+pip install -f requirements.txt
 ```
 ### pyaer
 pyaer needs https://github.com/inivation/libcaer. Clone it, then follow instructions in its README to install libcaer. 

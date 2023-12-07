@@ -17,6 +17,8 @@ import numpy as np
 from globals_and_utils import *
 from engineering_notation import EngNumber  as eng # only from pip
 import argparse
+import multiprocessing.connection as mpc
+from multiprocessing import  Pipe,Queue
 
 from pyaer.davis import DAVIS
 from pyaer import libcaer
@@ -25,22 +27,16 @@ log=my_logger(__name__)
 
 
 
-def producer(args):
+def producer(queue:Queue):
     """ produce frames for consumer
 
-    :param record: record frames to a folder name record
+    :param queue: possible Queue to send to instead of UDP socket
     """
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_address = ('', PORT)
 
-    device = DAVIS(noise_filter=True)
 
-    def cleanup():
-        log.info('closing {}'.format(device))
-        device.shutdown()
-        cv2.destroyAllWindows()
 
-    atexit.register(cleanup)
     record=args.record
     spacebar_records=args.spacebar_records
     log.info(f'recording to {record} with spacebar_records={spacebar_records}')
@@ -51,45 +47,59 @@ def producer(args):
         log.info(f'recording frames to {recording_folder}')
         Path(recording_folder).mkdir(parents=True, exist_ok=True)
 
-    print("DVS USB ID:", device.device_id)
-    if device.device_is_master:
-        print("DVS is master.")
-    else:
-        print("DVS is slave.")
-    print("DVS Serial Number:", device.device_serial_number)
-    print("DVS String:", device.device_string)
-    print("DVS USB bus Number:", device.device_usb_bus_number)
-    print("DVS USB device address:", device.device_usb_device_address)
-    print("DVS size X:", device.dvs_size_X)
-    print("DVS size Y:", device.dvs_size_Y)
-    print("Logic Version:", device.logic_version)
-    print("Background Activity Filter:",
-          device.dvs_has_background_activity_filter)
-    print("Color Filter", device.aps_color_filter, type(device.aps_color_filter))
-    print(device.aps_color_filter == 1)
+    def open_camera():
+        """ Opens the camera and returns handle to it
+        :return: device handle
+        """
+        device = DAVIS(noise_filter=True)
+        print("DVS USB ID:", device.device_id)
+        if device.device_is_master:
+            print("DVS is master.")
+        else:
+            print("DVS is slave.")
+        print("DVS Serial Number:", device.device_serial_number)
+        print("DVS String:", device.device_string)
+        print("DVS USB bus Number:", device.device_usb_bus_number)
+        print("DVS USB device address:", device.device_usb_device_address)
+        print("DVS size X:", device.dvs_size_X)
+        print("DVS size Y:", device.dvs_size_Y)
+        print("Logic Version:", device.logic_version)
+        print("Background Activity Filter:",
+            device.dvs_has_background_activity_filter)
+        print("Color Filter", device.aps_color_filter, type(device.aps_color_filter))
+        print(device.aps_color_filter == 1)
 
-    # device.start_data_stream()
-    assert (device.send_default_config())
-    # attempt to set up USB host buffers for acquisition thread to minimize latency
-    assert (device.set_config(
-        libcaer.CAER_HOST_CONFIG_USB,
-        libcaer.CAER_HOST_CONFIG_USB_BUFFER_NUMBER,
-        8))
-    assert (device.set_config(
-        libcaer.CAER_HOST_CONFIG_USB,
-        libcaer.CAER_HOST_CONFIG_USB_BUFFER_SIZE,
-        4096))
-    assert (device.data_start())
-    assert (device.set_config(
-        libcaer.CAER_HOST_CONFIG_PACKETS,
-        libcaer.CAER_HOST_CONFIG_PACKETS_MAX_CONTAINER_INTERVAL,
-        4000)) # set max interval to this value in us. Set to not produce too many packets/sec here, not sure about reasoning
-    assert (device.set_data_exchange_blocking())
+        # device.start_data_stream()
+        assert (device.send_default_config())
+        # attempt to set up USB host buffers for acquisition thread to minimize latency
+        assert (device.set_config(
+            libcaer.CAER_HOST_CONFIG_USB,
+            libcaer.CAER_HOST_CONFIG_USB_BUFFER_NUMBER,
+            8))
+        assert (device.set_config(
+            libcaer.CAER_HOST_CONFIG_USB,
+            libcaer.CAER_HOST_CONFIG_USB_BUFFER_SIZE,
+            4096))
+        assert (device.data_start())
+        assert (device.set_config(
+            libcaer.CAER_HOST_CONFIG_PACKETS,
+            libcaer.CAER_HOST_CONFIG_PACKETS_MAX_CONTAINER_INTERVAL,
+            4000)) # set max interval to this value in us. Set to not produce too many packets/sec here, not sure about reasoning
+        assert (device.set_data_exchange_blocking())
 
-    # setting bias after data stream started
-    device.set_bias_from_json("./configs/davis346_config.json")
-    xfac = float(IMSIZE) / device.dvs_size_X
-    yfac = float(IMSIZE) / device.dvs_size_Y
+        # setting bias after data stream started
+        device.set_bias_from_json("./configs/davis346_config.json")
+
+    dvs=None
+    while dvs is None:
+        try:
+            dvs=open_camera()
+        except Exception as e:
+            log.error(f'could not open DVS: {e}')
+            time.sleep(3)
+
+    xfac = float(IMSIZE) / dvs.dvs_size_X
+    yfac = float(IMSIZE) / dvs.dvs_size_Y
     histrange = [(0, v) for v in (IMSIZE, IMSIZE)]  # allocate DVS frame histogram to desired output size
     npix = IMSIZE * IMSIZE
     cv2_resized = False
@@ -101,6 +111,13 @@ def producer(args):
     frames_dropped_counter=0
     save_next_frame=not spacebar_records # if we don't supply the option, it will be False and we want to then save all frames
 
+    def cleanup():
+        log.info('closing {}'.format(dvs))
+        dvs.shutdown()
+        cv2.destroyAllWindows()
+
+    atexit.register(cleanup)
+
     try:
         timestr = time.strftime("%Y%m%d-%H%M")
         numpy_file = f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
@@ -110,7 +127,7 @@ def producer(args):
                 with Timer('accumulate DVS'):
                     events = None
                     while events is None or len(events)<EVENT_COUNT_PER_FRAME:
-                        pol_events, num_pol_event,_, _, _, _, _, _ = device.get_event()
+                        pol_events, num_pol_event,_, _, _, _, _, _ = dvs.get_event()
                         # assemble 'frame' of EVENT_COUNT events
                         if  num_pol_event>0:
                             if events is None:
@@ -177,7 +194,7 @@ def producer(args):
                                 save_next_frame=not spacebar_records
 
     except KeyboardInterrupt:
-        device.shutdown()
+        dvs.shutdown()
         if recording_folder is not None:
             log.info(f'*** recordings of {recording_frame_number-1} frames saved in {recording_folder}')
 
@@ -185,7 +202,7 @@ def producer(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='producer: Generates DVS frames for trixy to process in consumer', allow_abbrev=True,
+        description='producer: Generates DVS frames for roshambo to process in consumer', allow_abbrev=True,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "--record", type=str, default=None,
@@ -196,7 +213,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
-        producer(args)
+        producer(queue=None)
     except Exception as e:
         log.error(f'Error: {e}')
         sys.exit()

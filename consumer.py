@@ -10,9 +10,12 @@ import cv2
 import sys
 import tensorflow as tf
 # from keras.models import load_model
+
 import serial
 import socket
 from select import select
+import multiprocessing.connection as mpc
+from multiprocessing import  Pipe,Queue
 
 from tensorflow.python.keras import Input
 
@@ -33,6 +36,7 @@ try:
     os.environ['KMP_DUPLICATE_LIB_OK']='True'
 except Exception as e:
     print(e)
+
 
 def classify_img(img: np.array, interpreter, input_details, output_details):
     """ Classify uint8 img
@@ -115,16 +119,23 @@ def load_tflite_model(folder=None):
 
     return interpreter, input_details, output_details
 
+def consumer(queue:Queue):
+    """
+    consume frames to predict polarization
+    :param queue: if started with a queue, uses that for input of voxel volume
+    """
 
+    def none_or_str(value):
+        if value == 'None':
+            return None
+        return value
 
-
-if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='consumer: Consumes DVS frames for trixy to process', allow_abbrev=True,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        "--serial_port", type=str, default=SERIAL_PORT,
-        help="serial port, e.g. /dev/ttyUSB0")
+        "--serial_port", type=none_or_str, default=SERIAL_PORT,
+        help="serial port, e.g. /dev/ttyUSB0 or None to not user port")
 
     args = parser.parse_args()
 
@@ -136,34 +147,16 @@ if __name__ == '__main__':
     load_latest_model_convert_to_tflite()
     interpreter, input_details, output_details=load_tflite_model(MODEL_DIR)
 
+    arduino_serial_port=None
     serial_port = args.serial_port
-    log.info('opening serial port {} to send commands to finger'.format(serial_port))
-    arduino_serial_port = serial.Serial(serial_port, 115200, timeout=5)
-
+    if not serial_port is None:
+        log.info('opening serial port {} to send commands to finger'.format(serial_port))
+        try:
+            arduino_serial_port = serial.Serial(serial_port, 115200, timeout=5)
+        except Exception as e:
+            log.error(f'could not open serial port to control hand - ignoring ({e})')
     log.info(f'Using UDP buffer size {UDP_BUFFER_SIZE} to recieve the {IMSIZE}x{IMSIZE} images')
 
-    # saved_non_jokers = collections.deque(maxlen=NUM_NON_JOKER_IMAGES_TO_SAVE_PER_JOKER)  # lists of images to save
-    # Path(JOKERS_FOLDER).mkdir(parents=True, exist_ok=True)
-    # Path(NONJOKERS_FOLDER).mkdir(parents=True, exist_ok=True)
-
-
-    # def next_path_index(path):
-    #     l = glob.glob(path + '/[0-9]*.png')
-    #     if len(l) == 0:
-    #         return 0
-    #     else:
-    #         l2 = sorted(l)
-    #         last = l2[-1]
-    #         last2 = last.split('/')[-1]
-    #         last3 = last2.split('.')[0]
-    #         next = int(last3) + 1  # strip .png
-    #         return next
-    #
-    #
-    # next_joker_index = next_path_index(JOKERS_FOLDER)
-    # next_non_joker_index = next_path_index(NONJOKERS_FOLDER)
-    # cv2_resized = dict()
-    # finger_out_time = 0
     STATE_IDLE = 0
     STATE_FINGER_OUT = 1
     state = STATE_IDLE
@@ -192,20 +185,7 @@ if __name__ == '__main__':
         timestr = time.strftime("%Y%m%d-%H%M")
         with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
             with Timer('recieve UDP'):
-                # num_bytes_recieved=0
-                # receive_data=None
-                # tries=0
-                # while True: # read datagrams unti there are no more, so that we always get very latest one in our receive buffer
-                #     inputready, _, _ = select([server_socket], [], [], .1)
-                #     num_ready=len(inputready)
-                #     if (r
-                #     eceive_data is not None)  and (num_ready==0 or tries>2):
-                #         # Has danger that as we recieve a datagram, another arrives, getting us stuck here.
-                #         # Hence we break from loop only if  we have data AND (there is no more OR we already tried 3 times to empty the socket)
-                #         break
-                #     if num_ready>0:
-                        receive_data = server_socket.recv(UDP_BUFFER_SIZE)
-                    # tries+=1
+                receive_data = server_socket.recv(UDP_BUFFER_SIZE)
 
             with Timer('unpickle and normalize/reshape'):
                 (frame_number,timestamp, img) = pickle.loads(receive_data)
@@ -218,7 +198,7 @@ if __name__ == '__main__':
                 # pred = model.predict(img[None, :])
                 pred_class_name, pred_idx, pred_vector=classify_img(img, interpreter, input_details, output_details)
 
-            if pred_idx<=3: # symbol
+            if not arduino_serial_port is None and pred_idx<=3: # symbol
                 arduino_serial_port.write(pred_idx)
 
             cv2.putText(img, pred_class_name, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
@@ -239,21 +219,5 @@ if __name__ == '__main__':
             with Timer('producer->consumer inference delay',delay=dt, show_hist=True):
                 pass
 
-            # save_img= (img.squeeze()).astype('uint8')
-            # if is_joker: # joker
-            #     # find next name that is not taken yet
-            #     next_joker_index= write_next_image(JOKERS_FOLDER, next_joker_index, save_img)
-            #     show_frame(save_img, 'joker', cv2_resized)
-            #     non_joker_window_number=0
-            #     for saved_img in saved_non_jokers:
-            #         next_non_joker_index= write_next_image(NONJOKERS_FOLDER, next_non_joker_index, saved_img)
-            #         show_frame(saved_img, f'nonjoker{non_joker_window_number}', cv2_resized)
-            #         non_joker_window_number+=1
-            #     saved_non_jokers.clear()
-            # else:
-            #     if random.random()<.03: # append random previous images to not just get previous almost jokers
-            #         saved_non_jokers.append(copy.deepcopy(save_img)) # we need to copy the frame otherwise the reference is overwritten by next frame and we just get the same frame over and over
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     break
-
-
+if __name__ == '__main__':
+    consumer(queue=None)
