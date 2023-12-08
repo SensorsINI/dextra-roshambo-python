@@ -5,7 +5,8 @@ engineering_notation
 pyyaml
 opencv-python
 # torch
-keras==2.5.0
-tensorflow==2.5.0 # requires python==3.9
+# tensorflow>= 2.5.0,<2.6.0 # requires python==3.9
+tensorflow~= 2.5.0,<2.6.0 # requires python==3.9
+keras 
 tensorflow-model-optimization # pip install --user --upgrade
 pyaer # needs libcaer; can be installed with  sudo apt-get install libcaer-dev, otherewise see https://gitlab.com/inivation/dv/libcaer; see https://github.com/duguyue100/pyaer
