@@ -37,6 +37,36 @@ try:
 except Exception as e:
     print(e)
 
+class majorityVote:
+    #filter cmd with majority vote
+    def __init__(self, K, ncmd):
+        self.k = K
+        self.ncmd = ncmd
+        self.mid = 0
+        self.cirbuf = np.full(self.k, -1, dtype=np.int8)
+        self.cmdcnts = np.zeros(ncmd, dtype=np.int8)
+
+    def new_cmd(self, cmd):
+        if 0 <= cmd < self.ncmd:
+            idx = self.mid
+            self.cmdcnts[self.cirbuf[idx]] -= 1
+            self.cirbuf[idx] = cmd
+            self.cmdcnts[cmd] += 1
+
+            self.mid = (self.mid + 1) % self.k
+
+        return self.filt_cmd()
+
+    def filt_cmd(self):
+        majority_count = self.k // 2 + 1
+        imax = np.argmax(self.cmdcnts)
+        if self.cmdcnts[imax] >= majority_count:
+            return imax
+        return None
+
+
+cmdVoter = majorityVote(5, 4)
+useMajority= True
 
 def classify_img(img: np.array, interpreter, input_details, output_details):
     """ Classify uint8 img
@@ -200,6 +230,10 @@ def consumer(queue:Queue):
                 pred_class_name, pred_idx, pred_vector=classify_img(img, interpreter, input_details, output_details)
 
             if not arduino_serial_port is None and pred_idx<=3: # symbol
+                #
+                if useMajority:
+                    f_cmd = cmdVoter.new_cmd(pred_idx)
+                    pred_idx = f_cmd
                 arduino_serial_port.write(pred_idx)
 
             cv2.putText(img, pred_class_name, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
