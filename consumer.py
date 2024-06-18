@@ -8,6 +8,8 @@ import glob
 import pickle
 import cv2
 import sys
+import keras.saving
+import keras.saving
 import tensorflow as tf
 # from keras.models import load_model
 
@@ -39,14 +41,14 @@ except Exception as e:
 
 class majorityVote:
     #filter cmd with majority vote
-    def __init__(self, K, ncmd):
+    def __init__(self, K, ncmd): # K is size of window in votes, ncmd is the number of possible values, 0 to ncmd-1
         self.k = K
         self.ncmd = ncmd
         self.mid = 0
         self.cirbuf = np.full(self.k, -1, dtype=np.int8)
         self.cmdcnts = np.zeros(ncmd, dtype=np.int8)
 
-    def new_cmd(self, cmd):
+    def new_cmd(self, cmd): # cmd is the new value, in range 0 to ncmd-1
         if 0 <= cmd < self.ncmd:
             idx = self.mid
             self.cmdcnts[self.cirbuf[idx]] -= 1
@@ -57,7 +59,7 @@ class majorityVote:
 
         return self.filt_cmd()
 
-    def filt_cmd(self):
+    def filt_cmd(self): # produces the majority vote
         majority_count = self.k // 2 + 1
         imax = np.argmax(self.cmdcnts)
         if self.cmdcnts[imax] >= majority_count:
@@ -102,7 +104,7 @@ def load_latest_model_convert_to_tflite():
     # model.load_weights(os.path.join(MODEL_DIR, MODEL_BASE_NAME))
     load_from_numpy(model,'model/numpy_weights')
     print(f'model.input_shape: {model.input_shape}')
-    model.save(MODEL_DIR)
+    model.save('roshambo-model',save_format='tf')
     log.info('converting model to tensorflow lite model')
     converter = tf.lite.TFLiteConverter.from_saved_model(MODEL_DIR)  # path to the SavedModel directory
     tflite_model = converter.convert()
@@ -233,8 +235,11 @@ def consumer(queue:Queue):
                 #
                 if useMajority:
                     f_cmd = cmdVoter.new_cmd(pred_idx)
-                    pred_idx = f_cmd
-                arduino_serial_port.write(pred_idx)
+                    if not (f_cmd is None):
+                        pred_idx = f_cmd
+                        arduino_serial_port.write(pred_idx)
+                else:
+                    arduino_serial_port.write(pred_idx)
 
             cv2.putText(img, pred_class_name, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
 
