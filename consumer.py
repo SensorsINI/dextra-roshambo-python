@@ -237,7 +237,13 @@ def consumer(queue:Queue):
                     f_cmd = cmdVoter.new_cmd(pred_idx)
                     if not (f_cmd is None):
                         pred_idx = f_cmd
-                        arduino_serial_port.write(pred_idx)
+                        if pred_idx==0:
+                            arduino_serial_port.write(b'2')
+                        elif pred_idx==1:
+                            arduino_serial_port.write(b'3')
+                        elif pred_idx==2:
+                            arduino_serial_port.write(b'1')
+                        
                 else:
                     arduino_serial_port.write(pred_idx)
 
