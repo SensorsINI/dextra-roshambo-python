@@ -41,26 +41,36 @@ except Exception as e:
 
 class majorityVote:
     #filter cmd with majority vote
-    def __init__(self, K, ncmd): # K is size of window in votes, ncmd is the number of possible values, 0 to ncmd-1
-        self.k = K
-        self.ncmd = ncmd
-        self.mid = 0
-        self.cirbuf = np.full(self.k, -1, dtype=np.int8)
-        self.cmdcnts = np.zeros(ncmd, dtype=np.int8)
+    def __init__(self, window_length, num_classes): # window_length is size of window in votes, num_classes is the number of possible values, 0 to num_classes-1
+        self.window_length = window_length
+        self.num_classes = num_classes
+        self.ptr = 0 # pointer to circular buffer
+        self.cirbuf = np.full(self.window_length, -1, dtype=np.int8) # cirular buffer of most recent predictions
+        self.cmdcnts = np.zeros(num_classes, dtype=np.int8) # hold the number of votes for each prediction
+        self.num_predictions=0
 
-    def new_cmd(self, cmd): # cmd is the new value, in range 0 to ncmd-1
-        if 0 <= cmd < self.ncmd:
-            idx = self.mid
-            self.cmdcnts[self.cirbuf[idx]] -= 1
-            self.cirbuf[idx] = cmd
-            self.cmdcnts[cmd] += 1
+    def new_prediction_and_vote(self, symbol): # cmd is the new value, in range 0 to num_classes-1
+        """ Takes new prediction of symbol, returns possible new vote
+        :param symbol: the new classification of hand symbol
+        :returns: the majority vote or None if there is no majority
+        """
+        if 0 <= symbol < self.num_classes:
+            self.num_predictions+=1
+            idx = self.ptr # pointer to current idx in circular buffer
+            if self.num_predictions>self.window_length: 
+                self.cmdcnts[self.cirbuf[idx]] -= 1 # decrement count for previous prediction but only if we already filled the buffer, otherwise we end up with negative background
+            self.cirbuf[idx] = symbol # store latest prediction
+            self.cmdcnts[symbol] += 1  # vote for this prediction
 
-            self.mid = (self.mid + 1) % self.k
+            self.ptr = (self.ptr + 1) % self.window_length # increment and wrap pointer
 
-        return self.filt_cmd()
+        return self.vote()
 
-    def filt_cmd(self): # produces the majority vote
-        majority_count = self.k // 2 + 1
+    def vote(self): 
+        """ produces the majority vote
+        :returns: the majority if there is one, otherwise None
+        """
+        majority_count = self.window_length // 2 + 1 # e.g. 3 for window_length=5
         imax = np.argmax(self.cmdcnts)
         if self.cmdcnts[imax] >= majority_count:
             return imax
@@ -216,7 +226,7 @@ def consumer(queue:Queue):
     while True:
         timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
-        with Timer('overall consumer loop', numpy_file=None, show_hist=True):
+        with Timer('overall consumer loop', numpy_file=None, show_hist=False):
             with Timer('recieve UDP'):
                 receive_data = server_socket.recv(UDP_BUFFER_SIZE)
 
@@ -227,19 +237,30 @@ def consumer(queue:Queue):
                     log.warning(f'Dropped {dropped_frames} frames from producer')
                 last_frame_number=frame_number
                 # img = (1./255)*np.reshape(img, [IMSIZE, IMSIZE,1])
-            with Timer('run CNN'):
+            with Timer('run CNN', numpy_file=None, show_hist=True):
                 # pred = model.predict(img[None, :])
                 pred_class_name, pred_idx, pred_vector=classify_img(img, interpreter, input_details, output_details)
 
-            if not arduino_serial_port is None and pred_idx<=3: # symbol
+            if pred_idx<=3: # symbol recognized (or background==3)
                 #
                 if useMajority:
-                    f_cmd = cmdVoter.new_cmd(pred_idx)
+                    f_cmd = cmdVoter.new_prediction_and_vote(pred_idx)
                     if not (f_cmd is None):
                         pred_idx = f_cmd
-                        arduino_serial_port.write(pred_idx)
-                else:
+                        # find majority class name since it might be different than most recent prediction
+                        pred_class_name=list(CLASS_DICT.keys())[list(CLASS_DICT.values()).index(pred_idx)]
+                        if not arduino_serial_port is None:
+                            if pred_idx==0:
+                                arduino_serial_port.write(b'2')
+                            elif pred_idx==1:
+                                arduino_serial_port.write(b'3')
+                            elif pred_idx==2:
+                                arduino_serial_port.write(b'1')
+                        
+                        # arduino_serial_port.write(pred_idx)
+                elif not arduino_serial_port is None:
                     arduino_serial_port.write(pred_idx)
+
 
             cv2.putText(img, pred_class_name, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
 
