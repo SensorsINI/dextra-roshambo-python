@@ -262,7 +262,7 @@ def consumer(queue:Queue):
                     arduino_serial_port.write(pred_idx)
 
 
-            cv2.putText(img, pred_class_name, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+            cv2.putText(img, pred_class_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .7, (255, 255, 255), 1)
 
             cv2.namedWindow('RoshamboCNN', cv2.WINDOW_NORMAL)
             cv2.imshow('RoshamboCNN', 1 - img.astype('float') / 255)
@@ -277,7 +277,7 @@ def consumer(queue:Queue):
 
             # save time since frame sent from producer
             dt=time.time()-timestamp
-            with Timer('producer->consumer inference delay',delay=dt, show_hist=True):
+            with Timer('producer->consumer inference delay',delay=dt, show_hist=False):
                 pass
 
 if __name__ == '__main__':
