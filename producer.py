@@ -84,7 +84,7 @@ def producer(queue:Queue):
         assert (device.set_config(
             libcaer.CAER_HOST_CONFIG_PACKETS,
             libcaer.CAER_HOST_CONFIG_PACKETS_MAX_CONTAINER_INTERVAL,
-            4000)) # set max interval to this value in us. Set to not produce too many packets/sec here, not sure about reasoning
+            1000)) # set max interval to this value in us. Set to not produce too many packets/sec here, not sure about reasoning
         assert (device.set_data_exchange_blocking())
 
         # setting bias after data stream started
