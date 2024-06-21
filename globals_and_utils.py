@@ -43,6 +43,7 @@ MODEL_BASE_NAME= 'model_185' # base name of checkpoint .index and .data files in
 DEXTRA_NET_BASE_NAME= 'dextra_roshambo' # base name
 TFLITE_FILE_NAME= DEXTRA_NET_BASE_NAME + '.tflite' # tflite model is stored in same folder as full-blown TF2 model
 CLASS_DICT={'background':3, 'paper':0, 'scissors': 1, 'rock':2}
+MIN_INTERVAL_S_BETWEEN_CMDS=3e-3 # use to limit serial port command rate
 
 import signal
 def alarm_handler(signum, frame):

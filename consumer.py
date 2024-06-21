@@ -223,6 +223,7 @@ def consumer(queue:Queue):
 
     last_frame_number=0
     cv2_resized=False
+    time_last_sent_cmd=time.time()
     while True:
         timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
@@ -245,7 +246,7 @@ def consumer(queue:Queue):
                 #
                 if useMajority:
                     f_cmd = cmdVoter.new_prediction_and_vote(pred_idx)
-                    if not (f_cmd is None):
+                    if not (f_cmd is None) and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
                         pred_idx = f_cmd
                         # find majority class name since it might be different than most recent prediction
                         pred_class_name=list(CLASS_DICT.keys())[list(CLASS_DICT.values()).index(pred_idx)]
@@ -256,6 +257,7 @@ def consumer(queue:Queue):
                                 arduino_serial_port.write(b'3')
                             elif pred_idx==2:
                                 arduino_serial_port.write(b'1')
+                        time_last_sent_cmd=time.time()
                         
                         # arduino_serial_port.write(pred_idx)
                 elif not arduino_serial_port is None:
