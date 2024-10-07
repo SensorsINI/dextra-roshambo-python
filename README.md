@@ -1,4 +1,7 @@
-The Dextra rock-scissor-paper robot redone in python using pyaer and tensorflow.
+The Dextra rock-scissor-paper robot perception pipeline redone in python using pyaer and tensorflow.
+See also
+ * The Dextra tendon driven hand paper and design https://sensorsini.github.io/dextra-robot-hand/
+ * The Arduino firmware [https://github.com/SensorsINI/DextraRoshamboHand](https://github.com/SensorsINI/Dextra-robot-hand-firmware)
 
 The pretrained network is a 16-bit quantized weight and state CNN.
 
