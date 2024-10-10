@@ -15,7 +15,7 @@ from engineering_notation import EngNumber  as eng  # only from pip
 from matplotlib import pyplot as plt
 import numpy as np
 
-LOGGING_LEVEL = logging.DEBUG
+LOGGING_LEVEL = logging.INFO
 PORT = 12000  # UDP port used to send frames from producer to consumer
 IMSIZE = 64  # input image size, must match model
 UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / math.log(2))))
