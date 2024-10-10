@@ -15,7 +15,7 @@ from engineering_notation import EngNumber  as eng  # only from pip
 from matplotlib import pyplot as plt
 import numpy as np
 
-LOGGING_LEVEL = logging.INFO
+LOGGING_LEVEL = logging.DEBUG
 PORT = 12000  # UDP port used to send frames from producer to consumer
 IMSIZE = 64  # input image size, must match model
 UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / math.log(2))))
@@ -44,6 +44,16 @@ DEXTRA_NET_BASE_NAME= 'dextra_roshambo' # base name
 TFLITE_FILE_NAME= DEXTRA_NET_BASE_NAME + '.tflite' # tflite model is stored in same folder as full-blown TF2 model
 CLASS_DICT={'background':3, 'paper':0, 'scissors': 1, 'rock':2}
 MIN_INTERVAL_S_BETWEEN_CMDS=3e-3 # use to limit serial port command rate
+USE_MAJORITY_VOTE= True # base hand movements on majority vote over past few predictions of human hand symbol to improve accuracy (but increase latency)
+
+SHOW_STATISTICS_AT_END=False # set True to show timing histograms
+
+# museum settings
+from datetime import datetime
+MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time()
+MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
+MUSEUM_HAND_MOVEMENT_INTERVAL_M=5  # minutes between showing demo of RSP movement if no cmd has been sent
+
 
 import signal
 def alarm_handler(signum, frame):

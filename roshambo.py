@@ -31,7 +31,8 @@ def main():
     log.debug('starting Roshambo demo consumer process')
     con = Process(target=consumer, args=(queue,),name='consumer')
     con.start()
-    time.sleep(8) # give some time to load DNN
+    log.debug('sleeping 5 seconds')
+    time.sleep(5) # give some time to load DNN
     log.debug('starting Roshambo demo producer process')
     pro = Process(target=producer, args=(queue,),name='producer')
     pro.start()

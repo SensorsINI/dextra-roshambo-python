@@ -124,7 +124,7 @@ def producer(queue:Queue):
         numpy_file = None # TODO uncomment to save data f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
         while True:
 
-            with Timer('overall producer frame rate', numpy_file=numpy_file , show_hist=True) as timer_overall:
+            with Timer('overall producer frame rate', numpy_file=numpy_file , show_hist=SHOW_STATISTICS_AT_END) as timer_overall:
                 with Timer('accumulate DVS'):
                     events = None
                     while events is None or len(events)<EVENT_COUNT_PER_FRAME:

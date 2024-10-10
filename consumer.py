@@ -27,11 +27,14 @@ from engineering_notation import EngNumber  as eng # only from pip
 import collections
 from pathlib import Path
 import random
+from datetime import datetime # for hour of day for running demo 
 
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
 log=my_logger(__name__)
 from numpy_loader import load_from_numpy
+
+
 
 # Only used in mac osx
 try:
@@ -39,9 +42,14 @@ try:
 except Exception as e:
     print(e)
 
-class majorityVote:
+class majority_vote:
     #filter cmd with majority vote
     def __init__(self, window_length, num_classes): # window_length is size of window in votes, num_classes is the number of possible values, 0 to num_classes-1
+        """ Does median filter majority vote over past predictions of human hand symbol
+        :param window length: the size of window in votes
+        :param num_classes: the number of possible values, 0 to num_classes-1
+        :return: the majority if there is one, else None
+        """
         self.window_length = window_length
         self.num_classes = num_classes
         self.ptr = 0 # pointer to circular buffer
@@ -77,8 +85,6 @@ class majorityVote:
         return None
 
 
-cmdVoter = majorityVote(5, 4)
-useMajority= True
 
 def classify_img(img: np.array, interpreter, input_details, output_details):
     """ Classify uint8 img
@@ -161,16 +167,53 @@ def load_tflite_model(folder=None):
 
     return interpreter, input_details, output_details
 
+
+
 def consumer(queue:Queue):
     """
     consume frames to predict polarization
     :param queue: if started with a queue, uses that for input of voxel volume
     """
+    time_last_sent_cmd=time.time()
+    time_last_showed_demo_movement=time.time()
+    arduino_serial_port=None
 
     def none_or_str(value):
         if value == 'None':
             return None
         return value
+
+    def maybe_show_demo_sequence():
+        time_now=datetime.now().time()
+        if time_now>MUSEUM_OPENING_TIME and time_now<MUSEUM_CLOSING_TIME:
+            now=time.time()
+
+            nonlocal time_last_showed_demo_movement
+            nonlocal time_last_sent_cmd
+            time_interval=now-time_last_showed_demo_movement
+            if time_interval>MUSEUM_HAND_MOVEMENT_INTERVAL_M*60 \
+                    and now-time_last_sent_cmd>MUSEUM_HAND_MOVEMENT_INTERVAL_M*60:
+                
+                time_last_showed_demo_movement=now
+                
+                log.debug(f'showing demo movement because {MUSEUM_HAND_MOVEMENT_INTERVAL_M} minutes since last demo movement')
+                show_demo_sequence()
+
+
+    def show_demo_sequence():
+        log.debug('showing demo sequence')
+        cmds=[b'3',b'2',b'1'] # 3=rock, 1=paper, 2=scissors
+        interval_seconds=.6
+
+        try:
+            for c in cmds:
+                arduino_serial_port.write(c)
+                log.debug(f'sent {c}, sleeping {interval_seconds}s')
+                time.sleep(interval_seconds)
+
+        except serial.serialutil.SerialException as e:
+            log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_class_name}: {e}')
+                
 
     parser = argparse.ArgumentParser(
         description='consumer: Consumes DVS frames for trixy to process', allow_abbrev=True,
@@ -182,6 +225,7 @@ def consumer(queue:Queue):
     args = parser.parse_args()
 
     log.info('opening UDP port {} to receive frames from producer'.format(PORT))
+    socket.setdefaulttimeout(1) # set timeout to allow keyboard commands to cv window
     server_socket: socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     address = ("", PORT)
@@ -189,7 +233,7 @@ def consumer(queue:Queue):
     load_latest_model_convert_to_tflite()
     interpreter, input_details, output_details=load_tflite_model(MODEL_DIR)
 
-    arduino_serial_port=None
+
     serial_port = args.serial_port
     if not serial_port is None:
         log.info('opening serial port {} to send commands to finger'.format(serial_port))
@@ -203,7 +247,10 @@ def consumer(queue:Queue):
     STATE_FINGER_OUT = 1
     state = STATE_IDLE
 
-    log.info('GPU is {}'.format('available' if len(tf.config.list_physical_devices('GPU')) > 0 else 'not available (check tensorflow/cuda setup)'))
+    if len(tf.config.list_physical_devices('GPU')) > 0:
+        log.info('GPU is available')
+    else:
+        log.warning('GPU not available (check tensorflow/cuda setup)')
 
 
     def show_frame(frame, name, resized_dict):
@@ -223,13 +270,36 @@ def consumer(queue:Queue):
 
     last_frame_number=0
     cv2_resized=False
-    time_last_sent_cmd=time.time()
+
+    # map from prediction of symbol to correct hand command to beat human
+    # prediction symbol ('background' 'rock','scissors', 'paper'), class number (0-3)
+    # see Arduino firmware https://github.com/SensorsINI/Dextra-robot-hand-firmware for the commands and hand symbols shown
+    pred_to_cmd_dict={0:b'2',1:b'3',2:b'1',3:None}
+    cmd_voter = majority_vote(window_length=5, num_classes=4)
+
+    cv2.namedWindow('RoshamboCNN', cv2.WINDOW_NORMAL)
+    if not cv2_resized:
+        cv2.resizeWindow('RoshamboCNN', 600, 600)
+
+    log.info('in display, hit x to exit or spacebar to show demo movement')
     while True:
         timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
         with Timer('overall consumer loop', numpy_file=None, show_hist=False):
             with Timer('recieve UDP'):
-                receive_data = server_socket.recv(UDP_BUFFER_SIZE)
+                try:
+                    receive_data = server_socket.recv(UDP_BUFFER_SIZE)
+                except socket.timeout:
+                    log.debug('timeout for frame from DVS')
+                    k = cv2.waitKey(1) & 0xFF # 1ms poll
+                    if k==ord('x'):
+                        break
+                    elif k==ord(' '):
+                        show_demo_sequence()
+                    else:
+                        maybe_show_demo_sequence()
+                    continue
+
 
             with Timer('unpickle and normalize/reshape'):
                 (frame_number,timestamp, img) = pickle.loads(receive_data)
@@ -238,44 +308,45 @@ def consumer(queue:Queue):
                     log.warning(f'Dropped {dropped_frames} frames from producer')
                 last_frame_number=frame_number
                 # img = (1./255)*np.reshape(img, [IMSIZE, IMSIZE,1])
-            with Timer('run CNN', numpy_file=None, show_hist=True):
+            with Timer('run CNN', numpy_file=None, show_hist=SHOW_STATISTICS_AT_END):
                 # pred = model.predict(img[None, :])
                 pred_class_name, pred_idx, pred_vector=classify_img(img, interpreter, input_details, output_details)
 
             if pred_idx<=3: # symbol recognized (or background==3)
-                #
-                if useMajority:
-                    f_cmd = cmdVoter.new_prediction_and_vote(pred_idx)
-                    if not (f_cmd is None) and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
-                        pred_idx = f_cmd
-                        # find majority class name since it might be different than most recent prediction
-                        pred_class_name=list(CLASS_DICT.keys())[list(CLASS_DICT.values()).index(pred_idx)]
-                        if not arduino_serial_port is None:
-                            if pred_idx==0:
-                                arduino_serial_port.write(b'2')
-                            elif pred_idx==1:
-                                arduino_serial_port.write(b'3')
-                            elif pred_idx==2:
-                                arduino_serial_port.write(b'1')
+                cmd=pred_to_cmd_dict[pred_idx] # start with no command sent to hand
+                if USE_MAJORITY_VOTE:
+                    vote = cmd_voter.new_prediction_and_vote(pred_idx)
+                    if not vote is None: 
+                        cmd = pred_to_cmd_dict[vote]
+                        pred_class_name=list(CLASS_DICT.keys())[list(CLASS_DICT.values()).index(vote)]
+
+                # now send a command if there is one and we have not sent too recently
+                if not serial_port is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
+                    try:
+                        arduino_serial_port.write(cmd)
                         time_last_sent_cmd=time.time()
-                        
-                        # arduino_serial_port.write(pred_idx)
-                elif not arduino_serial_port is None:
-                    arduino_serial_port.write(pred_idx)
+                        log.debug(f'sent cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_class_name}')
+
+                    except serial.serialutil.SerialException as e:
+                        log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_class_name}: {e}')
 
 
-            cv2.putText(img, pred_class_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .7, (255, 255, 255), 1)
 
             cv2.namedWindow('RoshamboCNN', cv2.WINDOW_NORMAL)
+            cv2.putText(img, pred_class_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .7, (255, 255, 255), 1)
             cv2.imshow('RoshamboCNN', 1 - img.astype('float') / 255)
             if not cv2_resized:
                 cv2.resizeWindow('RoshamboCNN', 600, 600)
                 cv2_resized = True
-            k = cv2.waitKey(1) & 0xFF
-            if k == ord('q') or k==ord('x'):
+            k = cv2.waitKey(1) & 0xFF # 1ms poll
+            if k==ord('x'):
                 break
             elif k == ord('p'):
                 print_timing_info()
+            elif k==ord(' '):
+                show_demo_sequence()
+
+            maybe_show_demo_sequence()
 
             # save time since frame sent from producer
             dt=time.time()-timestamp
