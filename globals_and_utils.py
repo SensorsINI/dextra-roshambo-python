@@ -53,7 +53,9 @@ from datetime import datetime
 MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time()
 MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
 MUSEUM_HAND_MOVEMENT_INTERVAL_M=5  # minutes between showing demo of RSP movement if no cmd has been sent
-
+MUSEUM_LOGGING_FILES_FOLDER='logging'
+MUSEUM_LOGGING_FILE="roshambo-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
+MUSEUM_LOGGING_INTERVAL_MINUTES=1 # minutes between logging hand actions
 
 import signal
 def alarm_handler(signum, frame):

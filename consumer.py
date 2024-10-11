@@ -28,6 +28,7 @@ import collections
 from pathlib import Path
 import random
 from datetime import datetime # for hour of day for running demo 
+import csv
 
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
@@ -175,13 +176,71 @@ def consumer(queue:Queue):
     :param queue: if started with a queue, uses that for input of voxel volume
     """
     time_last_sent_cmd=time.time()
+    cmd_last_sent=None # to track changes of cmd for logging
     time_last_showed_demo_movement=time.time()
     arduino_serial_port=None
+    last_frame_number=0
+    cv2_resized=False
+    resized_dict={}
+    # logging
+    museum_csv_logging_file=None
+    museum_csv_writer=None
+    museum_movements_since_last_log=0
+    museum_last_minute_written=0
+
+
+    def show_frame(frame, name, resized_dict)->int:
+        """ Show the frame in named cv2 window and handle resizing
+
+        :param frame: 2d array of float
+        :param name: string name for window
+        :param resized_dict: dictonary that holds cv2 window names used before
+
+        :returns: key code, check it with key==ord('x) for example
+        """
+        cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+        cv2.imshow(name, frame)
+        if not (name in resized_dict):
+            cv2.resizeWindow(name, 600, 600)
+            resized_dict[name] = True
+        key = cv2.waitKey(1) & 0xFF # 1ms poll
+        return key
 
     def none_or_str(value):
         if value == 'None':
             return None
         return value
+    
+    def send_cmd(cmd):
+        nonlocal time_last_sent_cmd
+        nonlocal cmd_last_sent
+        nonlocal arduino_serial_port
+        nonlocal museum_csv_writer
+        nonlocal museum_movements_since_last_log
+        nonlocal museum_last_minute_written
+        try:
+            arduino_serial_port.write(cmd)
+            time_last_sent_cmd=time.time()
+            if museum_csv_writer:
+                if cmd!=cmd_last_sent:
+                    museum_movements_since_last_log+=1
+                    now=datetime.now()
+                    year=now.year
+                    weekday=now.weekday()
+                    hour=now.hour # hour of day
+                    minute=now.minute
+                    day_of_year = now.timetuple().tm_yday # day of year
+                    if minute<museum_last_minute_written or minute-museum_last_minute_written>=MUSEUM_LOGGING_INTERVAL_MINUTES:
+                        try:
+                            log.info(f'writing log entry\nyear {year}, day {day_of_year}, weekday {weekday}, hour {hour}, minute {minute}, movements {museum_movements_since_last_log}')
+                            museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute, museum_movements_since_last_log])
+                        except Exception as e:
+                            log.error(f'could not write to museum logging file: {e}')
+                        museum_movements_since_last_log=0
+                        museum_last_minute_written=minute
+            cmd_last_sent=cmd
+        except serial.serialutil.SerialException as e:
+            log.error(f'Error writing to serial port {SERIAL_PORT}: {e}')
 
     def maybe_show_demo_sequence():
         time_now=datetime.now().time()
@@ -224,6 +283,12 @@ def consumer(queue:Queue):
 
     args = parser.parse_args()
 
+    log.info("starting up, showing window")
+    img=np.zeros([64,64],dtype=np.uint8)
+    cv2.putText(img, "x: exit", (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
+    cv2.putText(img, "space: move", (1, 30), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
+    show_frame(frame=img, name='RoshamboCNN',resized_dict=resized_dict)
+    
     log.info('opening UDP port {} to receive frames from producer'.format(PORT))
     socket.setdefaulttimeout(1) # set timeout to allow keyboard commands to cv window
     server_socket: socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -232,6 +297,19 @@ def consumer(queue:Queue):
     server_socket.bind(address)
     load_latest_model_convert_to_tflite()
     interpreter, input_details, output_details=load_tflite_model(MODEL_DIR)
+
+    # museum logging
+    if not MUSEUM_LOGGING_FILE is None and not MUSEUM_LOGGING_FILES_FOLDER is None:
+        try:
+            if not os.path.exists(MUSEUM_LOGGING_FILES_FOLDER):
+                os.mkdir(MUSEUM_LOGGING_FILES_FOLDER)
+            museum_logging_file_name=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y%m%d-%H%M")+'.csv')
+            museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
+            museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
+            museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'museum_movements_this_hour'])
+            log.info(f'created logging file {museum_logging_file_name}')
+        except Exception as e:
+            log.error(f'could not open CSV file {MUSEUM_LOGGING_FILE}: {e}')
 
 
     serial_port = args.serial_port
@@ -253,23 +331,7 @@ def consumer(queue:Queue):
         log.warning('GPU not available (check tensorflow/cuda setup)')
 
 
-    def show_frame(frame, name, resized_dict):
-        """ Show the frame in named cv2 window and handle resizing
 
-        :param frame: 2d array of float
-        :param name: string name for window
-        """
-        cv2.namedWindow(name, cv2.WINDOW_NORMAL)
-        cv2.imshow(name, frame)
-        if not (name in resized_dict):
-            cv2.resizeWindow(name, 300, 300)
-            resized_dict[name] = True
-            # wait minimally since interp takes time anyhow
-            cv2.waitKey(1)
-
-
-    last_frame_number=0
-    cv2_resized=False
 
     # map from prediction of symbol to correct hand command to beat human
     # prediction symbol ('background' 'rock','scissors', 'paper'), class number (0-3)
@@ -277,9 +339,8 @@ def consumer(queue:Queue):
     pred_to_cmd_dict={0:b'2',1:b'3',2:b'1',3:None}
     cmd_voter = majority_vote(window_length=5, num_classes=4)
 
-    cv2.namedWindow('RoshamboCNN', cv2.WINDOW_NORMAL)
-    if not cv2_resized:
-        cv2.resizeWindow('RoshamboCNN', 600, 600)
+
+    show_demo_sequence()
 
     log.info('in display, hit x to exit or spacebar to show demo movement')
     while True:
@@ -322,23 +383,12 @@ def consumer(queue:Queue):
 
                 # now send a command if there is one and we have not sent too recently
                 if not serial_port is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
-                    try:
-                        arduino_serial_port.write(cmd)
-                        time_last_sent_cmd=time.time()
-                        log.debug(f'sent cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_class_name}')
-
-                    except serial.serialutil.SerialException as e:
-                        log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_class_name}: {e}')
+                    log.debug(f'sending cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_class_name}')
+                    send_cmd(cmd)
 
 
-
-            cv2.namedWindow('RoshamboCNN', cv2.WINDOW_NORMAL)
-            cv2.putText(img, pred_class_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .7, (255, 255, 255), 1)
-            cv2.imshow('RoshamboCNN', 1 - img.astype('float') / 255)
-            if not cv2_resized:
-                cv2.resizeWindow('RoshamboCNN', 600, 600)
-                cv2_resized = True
-            k = cv2.waitKey(1) & 0xFF # 1ms poll
+            cv2.putText(img, pred_class_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
+            k=show_frame( 1 - img.astype('float') / 255,'RoshamboCNN',resized_dict)
             if k==ord('x'):
                 break
             elif k == ord('p'):
