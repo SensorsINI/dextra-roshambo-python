@@ -37,7 +37,7 @@ Install them to the new conda env from the conda prompt with
 
 ``` bash
 conda activate roshambo # probably already activate
-pip install -f requirements.txt
+pip install -r requirements.txt
 ```
 
 If you have trouble with pyaer, see https://github.com/duguyue100/pyaer. It should work for linux and mac OS intel silicon machines. Windows probably will not work natively, but you can run the code in a WSL2 Ubuntu virtual machine using https://github.com/dorssel/usbipd-win to map the USB port to WSL2 Ubuntu.
