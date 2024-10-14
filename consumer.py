@@ -101,7 +101,7 @@ def classify_img(img: np.array, interpreter, input_details, output_details):
     interpreter.invoke()
     pred_vector = interpreter.get_tensor(output_details[0]['index'])[0]
     pred_idx=np.argmax(np.array(pred_vector))
-    pred_class_name=list(CLASS_DICT.keys())[list(CLASS_DICT.values()).index(pred_idx)]
+    pred_class_name=list(SYMBOL_TO_PRED_DICT.keys())[list(SYMBOL_TO_PRED_DICT.values()).index(pred_idx)]
     return pred_class_name, pred_idx, pred_vector
 
 
@@ -188,6 +188,8 @@ def consumer(queue:Queue):
     museum_movements_since_last_log=0
     museum_last_minute_written=0
 
+    save_frames_folder=None
+    save_frames_last_frame_saved=0
 
     def show_frame(frame, name, resized_dict)->int:
         """ Show the frame in named cv2 window and handle resizing
@@ -300,7 +302,7 @@ def consumer(queue:Queue):
 
     # museum logging
     if not MUSEUM_LOGGING_FILE is None and not MUSEUM_LOGGING_FILES_FOLDER is None:
-        try:
+        # try:
             if not os.path.exists(MUSEUM_LOGGING_FILES_FOLDER):
                 os.mkdir(MUSEUM_LOGGING_FILES_FOLDER)
             museum_logging_file_name=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y%m%d-%H%M")+'.csv')
@@ -308,8 +310,18 @@ def consumer(queue:Queue):
             museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
             museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'museum_movements_this_hour'])
             log.info(f'created logging file {museum_logging_file_name}')
-        except Exception as e:
-            log.error(f'could not open CSV file {MUSEUM_LOGGING_FILE}: {e}')
+            if not SAVE_FRAMES_STORAGE_LOCATION is None and SAVE_FRAMES_INTERVAL>0:
+                save_frames_folder=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,SAVE_FRAMES_STORAGE_LOCATION)
+                if not os.path.exists(save_frames_folder):
+                    os.mkdir(save_frames_folder)
+                    log.info(f'made folder {save_frames_folder} to save sample frames')
+                    for symbol in SYMBOL_TO_PRED_DICT.keys():
+                        symfolder=os.path.join(save_frames_folder,symbol)
+                        if not os.path.exists(symfolder):
+                            os.mkdir(symfolder)
+                            log.info(f'made folder {symfolder}')
+        # except Exception as e:
+        #     log.error(f'could not open CSV file {MUSEUM_LOGGING_FILE}: {e}')
 
 
     serial_port = args.serial_port
@@ -379,7 +391,14 @@ def consumer(queue:Queue):
                     vote = cmd_voter.new_prediction_and_vote(pred_idx)
                     if not vote is None: 
                         cmd = pred_to_cmd_dict[vote]
-                        pred_class_name=list(CLASS_DICT.keys())[list(CLASS_DICT.values()).index(vote)]
+                        pred_class_name=PRED_TO_SYMBOL_DICT[vote]
+                        if SAVE_FRAMES_INTERVAL>0 and save_frames_folder and frame_number-save_frames_last_frame_saved>SAVE_FRAMES_INTERVAL:
+                            fname=str(int(time.time()))+'.png'
+                            path=os.path.join(save_frames_folder,pred_class_name,fname)
+                            log.debug(f'saving predicted {pred_class_name} frame # {frame_number} as file {path}')
+                            cv2.imwrite(path,img=img)
+                            save_frames_last_frame_saved=frame_number
+                            pass
 
                 # now send a command if there is one and we have not sent too recently
                 if not serial_port is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
