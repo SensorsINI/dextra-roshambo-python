@@ -6,6 +6,7 @@ import argparse
 import copy
 import glob
 import pickle
+import shutil
 import cv2
 import sys
 import keras.saving
@@ -176,7 +177,8 @@ def consumer(queue:Queue):
     :param queue: if started with a queue, uses that for input of voxel volume
     """
     time_last_sent_cmd=time.time()
-    cmd_last_sent=None # to track changes of cmd for logging
+    last_cmd_sent=None # to track changes of cmd for logging
+    last_prediction_name=None # to track changes prediction of human hand symbol name
     time_last_showed_demo_movement=time.time()
     arduino_serial_port=None
     last_frame_number=0
@@ -190,6 +192,7 @@ def consumer(queue:Queue):
 
     save_frames_folder=None
     save_frames_last_frame_saved=0
+    save_frames_disabled=False # set True when disk space falls below SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB
 
     def show_frame(frame, name, resized_dict)->int:
         """ Show the frame in named cv2 window and handle resizing
@@ -215,7 +218,7 @@ def consumer(queue:Queue):
     
     def send_cmd(cmd):
         nonlocal time_last_sent_cmd
-        nonlocal cmd_last_sent
+        nonlocal last_cmd_sent
         nonlocal arduino_serial_port
         nonlocal museum_csv_writer
         nonlocal museum_movements_since_last_log
@@ -224,7 +227,7 @@ def consumer(queue:Queue):
             arduino_serial_port.write(cmd)
             time_last_sent_cmd=time.time()
             if museum_csv_writer:
-                if cmd!=cmd_last_sent:
+                if cmd!=last_cmd_sent:
                     museum_movements_since_last_log+=1
                     now=datetime.now()
                     year=now.year
@@ -240,7 +243,7 @@ def consumer(queue:Queue):
                             log.error(f'could not write to museum logging file: {e}')
                         museum_movements_since_last_log=0
                         museum_last_minute_written=minute
-            cmd_last_sent=cmd
+            last_cmd_sent=cmd
         except serial.serialutil.SerialException as e:
             log.error(f'Error writing to serial port {SERIAL_PORT}: {e}')
 
@@ -273,7 +276,7 @@ def consumer(queue:Queue):
                 time.sleep(interval_seconds)
 
         except serial.serialutil.SerialException as e:
-            log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_class_name}: {e}')
+            log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_name}: {e}')
                 
 
     parser = argparse.ArgumentParser(
@@ -383,30 +386,37 @@ def consumer(queue:Queue):
                 # img = (1./255)*np.reshape(img, [IMSIZE, IMSIZE,1])
             with Timer('run CNN', numpy_file=None, show_hist=SHOW_STATISTICS_AT_END):
                 # pred = model.predict(img[None, :])
-                pred_class_name, pred_idx, pred_vector=classify_img(img, interpreter, input_details, output_details)
+                pred_name, pred_idx, pred_vector=classify_img(img, interpreter, input_details, output_details)
 
             if pred_idx<=3: # symbol recognized (or background==3)
                 cmd=pred_to_cmd_dict[pred_idx] # start with no command sent to hand
                 if USE_MAJORITY_VOTE:
                     vote = cmd_voter.new_prediction_and_vote(pred_idx)
-                    if not vote is None: 
+                    if vote is None:
+                        continue
+                    else:
                         cmd = pred_to_cmd_dict[vote]
-                        pred_class_name=PRED_TO_SYMBOL_DICT[vote]
-                        if SAVE_FRAMES_INTERVAL>0 and save_frames_folder and frame_number-save_frames_last_frame_saved>SAVE_FRAMES_INTERVAL:
-                            fname=str(int(time.time()))+'.png'
-                            path=os.path.join(save_frames_folder,pred_class_name,fname)
-                            log.debug(f'saving predicted {pred_class_name} frame # {frame_number} as file {path}')
-                            cv2.imwrite(path,img=img)
-                            save_frames_last_frame_saved=frame_number
-                            pass
+                        pred_name=PRED_TO_SYMBOL_DICT[vote]
+                if not save_frames_disabled and SAVE_FRAMES_INTERVAL>0 and save_frames_folder and pred_name!=last_prediction_name and frame_number-save_frames_last_frame_saved>=SAVE_FRAMES_INTERVAL:
+                    fname=str(int(time.time()))+'.png'
+                    path=os.path.join(save_frames_folder,pred_name,fname)
+                    log.debug(f'saving new predicted {pred_name} frame # {frame_number} as file {path}')
+                    cv2.imwrite(path,img=img)
+                    save_frames_last_frame_saved=frame_number
+                    last_prediction_name=pred_name
+                    if frame_number%1000==0: # only check disk every thousand frames
+                        free_gb=shutil.disk_usage('.').free/1.0e9
+                        if free_gb<SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB:
+                            log.warning(f'saving frames disabled because free_gb={free_gb:.1f} is less than < SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB={SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB}')
+                            save_frames_disabled=True
 
                 # now send a command if there is one and we have not sent too recently
                 if not serial_port is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
-                    log.debug(f'sending cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_class_name}')
+                    log.debug(f'sending cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_name}')
                     send_cmd(cmd)
 
 
-            cv2.putText(img, pred_class_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
+            cv2.putText(img, pred_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
             k=show_frame( 1 - img.astype('float') / 255,'RoshamboCNN',resized_dict)
             if k==ord('x'):
                 break

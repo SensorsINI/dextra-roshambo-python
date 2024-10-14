@@ -14,11 +14,17 @@ import atexit
 from engineering_notation import EngNumber  as eng  # only from pip
 from matplotlib import pyplot as plt
 import numpy as np
+from pyaer.davis import DAVIS
+from pyaer.dvs128 import DVS128
+
 
 LOGGING_LEVEL = logging.INFO
 PORT = 12000  # UDP port used to send frames from producer to consumer
 IMSIZE = 64  # input image size, must match model
 UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / math.log(2))))
+
+CAMERA_TYPE=DVS128 # DAVIS when using DAVIS camera
+CAMERA_BIASES='./configs/davis346_config.json' if CAMERA_TYPE is DAVIS else './configs/dvs128_config.json'
 
 EVENT_COUNT_PER_FRAME = 5000  # events per frame
 EVENT_COUNT_CLIP_VALUE = 16  # full count value for colleting histograms of DVS events
@@ -56,11 +62,12 @@ MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
 MUSEUM_HAND_MOVEMENT_INTERVAL_M=5  # minutes between showing demo of RSP movement if no cmd has been sent
 MUSEUM_LOGGING_FILES_FOLDER='logging'
 MUSEUM_LOGGING_FILE="roshambo-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
-MUSEUM_LOGGING_INTERVAL_MINUTES=1 # minutes between logging hand actions
+MUSEUM_LOGGING_INTERVAL_MINUTES=10 # minutes between logging number of hand actions
 
 # saving frames
-SAVE_FRAMES_INTERVAL=100
+SAVE_FRAMES_INTERVAL=10
 SAVE_FRAMES_STORAGE_LOCATION='frames' # saved in logging folder too, in this subfolder
+SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB=100
 
 import signal
 def alarm_handler(signum, frame):

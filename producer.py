@@ -21,6 +21,8 @@ import multiprocessing.connection as mpc
 from multiprocessing import  Pipe,Queue
 
 from pyaer.davis import DAVIS
+from pyaer.dvs128 import DVS128
+
 from pyaer import libcaer
 
 log=my_logger(__name__)
@@ -51,7 +53,7 @@ def producer(queue:Queue):
         """ Opens the DAVIS camera, set biases, and returns device handle to it
         :return: device handle
         """
-        device = DAVIS(noise_filter=True)
+        device = CAMERA_TYPE(noise_filter=True)
         print("DVS USB ID:", device.device_id)
         if device.device_is_master:
             print("DVS is master.")
@@ -63,11 +65,20 @@ def producer(queue:Queue):
         print("DVS USB device address:", device.device_usb_device_address)
         print("DVS size X:", device.dvs_size_X)
         print("DVS size Y:", device.dvs_size_Y)
-        print("Logic Version:", device.logic_version)
-        print("Background Activity Filter:",
-            device.dvs_has_background_activity_filter)
-        print("Color Filter", device.aps_color_filter, type(device.aps_color_filter))
-        print(device.aps_color_filter == 1)
+        try:
+            print("Logic Version:", device.logic_version)
+        except:
+            print("DVS128 camera has no logic version information available")
+        try:
+            print("Background Activity Filter:",
+                device.dvs_has_background_activity_filter)
+        except:
+            print("DVS128 has no background activity denoising filter")
+        try:
+            print("Color Filter", device.aps_color_filter, type(device.aps_color_filter))
+            print(device.aps_color_filter == 1)
+        except:
+            print("DVS128 has no color filter setting to print or set")
 
         # device.start_data_stream()
         assert (device.send_default_config())
@@ -88,7 +99,8 @@ def producer(queue:Queue):
         assert (device.set_data_exchange_blocking())
 
         # setting bias after data stream started
-        device.set_bias_from_json("./configs/davis346_config.json")
+        log.info(f'setting biases from {CAMERA_BIASES}')
+        device.set_bias_from_json(CAMERA_BIASES)
         return device
 
     dvs=None
@@ -128,7 +140,8 @@ def producer(queue:Queue):
                 with Timer('accumulate DVS'):
                     events = None
                     while events is None or len(events)<EVENT_COUNT_PER_FRAME:
-                        pol_events, num_pol_event,_, _, _, _, _, _ = dvs.get_event()
+                        # pol_events, num_pol_event,_, _, _, _, _, _ = dvs.get_event()
+                        pol_events, num_pol_event, *_ = dvs.get_event() # ignore other return values since only brightness change events are used from DVS and DAVIS
                         # assemble 'frame' of EVENT_COUNT events
                         if  num_pol_event>0:
                             if events is None:
