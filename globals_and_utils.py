@@ -28,12 +28,13 @@ CAMERA_BIASES='./configs/davis346_config.json' if CAMERA_TYPE is DAVIS else './c
 
 EVENT_COUNT_PER_FRAME = 1500 if CAMERA_TYPE is DVS128 else 5000  # events per frame
 EVENT_COUNT_CLIP_VALUE = 16  # full count value for colleting histograms of DVS events
-SHOW_DVS_OUTPUT = True # producer shows the accumulated DVS frames as aid for focus and alignment
+SHOW_DVS_OUTPUT = False # producer shows the accumulated DVS frames as aid for focus and alignment
 MIN_PRODUCER_FRAME_INTERVAL_MS=5.0 # inference takes about 3ms and normalization takes 1ms, hence at least 2ms
         # limit rate that we send frames to about what the GPU can manage for inference time
         # after we collect sufficient events, we don't bother to normalize and send them unless this time has
         # passed since last frame was sent. That way, we make sure not to flood the consumer
 MAX_SHOWN_DVS_FRAME_RATE_HZ=15 # limits cv2 rendering of DVS frames to reduce loop latency for the producer
+FULLSCREEN=True # for kiosk demo autostart
 
 DATA_FOLDER = 'data' #'data'  # new samples stored here
 NUM_NON_JOKER_IMAGES_TO_SAVE_PER_JOKER = 3 # when joker detected by consumer, this many random previous nonjoker frames are also saved

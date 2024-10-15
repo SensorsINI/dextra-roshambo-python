@@ -204,8 +204,12 @@ def consumer(queue:Queue):
         :returns: key code, check it with key==ord('x) for example
         """
         cv2.namedWindow(name, cv2.WINDOW_NORMAL)
+        if FULLSCREEN:
+            cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        
+
         cv2.imshow(name, frame)
-        if not (name in resized_dict):
+        if not FULLSCREEN and not (name in resized_dict):
             cv2.resizeWindow(name, 600, 600)
             resized_dict[name] = True
         key = cv2.waitKey(1) & 0xFF # 1ms poll
