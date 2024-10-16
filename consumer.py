@@ -180,7 +180,7 @@ def consumer(queue:Queue):
     last_cmd_sent=None # to track changes of cmd for logging
     last_prediction_name=None # to track changes prediction of human hand symbol name
     time_last_showed_demo_movement=time.time()
-    arduino_serial_port=None
+    serial_port_instance=None
     last_frame_number=0
     cv2_resized=False
     resized_dict={}
@@ -223,12 +223,12 @@ def consumer(queue:Queue):
     def send_cmd(cmd):
         nonlocal time_last_sent_cmd
         nonlocal last_cmd_sent
-        nonlocal arduino_serial_port
+        nonlocal serial_port_instance
         nonlocal museum_csv_writer
         nonlocal museum_movements_since_last_log
         nonlocal museum_last_minute_written
         try:
-            arduino_serial_port.write(cmd)
+            serial_port_instance.write(cmd)
             time_last_sent_cmd=time.time()
             if museum_csv_writer:
                 if cmd!=last_cmd_sent:
@@ -269,13 +269,16 @@ def consumer(queue:Queue):
 
 
     def show_demo_sequence():
+        if serial_port_instance is None:
+            log.warning('cannot show demo sequence, serial port is None')
+            return
         log.debug('showing demo sequence')
         cmds=[b'3',b'2',b'1'] # 3=rock, 1=paper, 2=scissors
         interval_seconds=.6
 
         try:
             for c in cmds:
-                arduino_serial_port.write(c)
+                serial_port_instance.write(c)
                 log.debug(f'sent {c}, sleeping {interval_seconds}s')
                 time.sleep(interval_seconds)
 
@@ -301,6 +304,7 @@ def consumer(queue:Queue):
     log.info('opening UDP port {} to receive frames from producer'.format(PORT))
     socket.setdefaulttimeout(1) # set timeout to allow keyboard commands to cv window
     server_socket: socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    log.info(f'Using UDP buffer size {UDP_BUFFER_SIZE} to recieve the {IMSIZE}x{IMSIZE} images')
 
     address = ("", PORT)
     server_socket.bind(address)
@@ -331,14 +335,8 @@ def consumer(queue:Queue):
         #     log.error(f'could not open CSV file {MUSEUM_LOGGING_FILE}: {e}')
 
 
-    serial_port = args.serial_port
-    if not serial_port is None:
-        log.info('opening serial port {} to send commands to finger'.format(serial_port))
-        try:
-            arduino_serial_port = serial.Serial(serial_port, 115200, timeout=5)
-        except Exception as e:
-            log.error(f'could not open serial port to control hand - ignoring ({e})')
-    log.info(f'Using UDP buffer size {UDP_BUFFER_SIZE} to recieve the {IMSIZE}x{IMSIZE} images')
+    serial_port_name = args.serial_port
+    serial_port_instance = open_serial_port(serial_port_name)
 
     STATE_IDLE = 0
     STATE_FINGER_OUT = 1
@@ -415,7 +413,10 @@ def consumer(queue:Queue):
                             save_frames_disabled=True
 
                 # now send a command if there is one and we have not sent too recently
-                if not serial_port is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
+                if serial_port_instance is None:
+                       serial_port_instance = open_serial_port(serial_port_name) # try opening it if it does not exist, maybe got replugged or lost power
+
+                if not serial_port_instance is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
                     log.debug(f'sending cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_name}')
                     send_cmd(cmd)
 
@@ -435,6 +436,16 @@ def consumer(queue:Queue):
             dt=time.time()-timestamp
             with Timer('producer->consumer inference delay',delay=dt, show_hist=False):
                 pass
+
+def open_serial_port(serial_port_name):
+    serial_port_instance=None
+    if not serial_port_name is None:
+        log.info('opening serial port {} to send commands to finger'.format(serial_port_name))
+        try:
+            serial_port_instance = serial.Serial(serial_port_name, 115200, timeout=5)
+        except Exception as e:
+            log.error(f'could not open serial port to control hand - ignoring ({e})')
+    return serial_port_instance
 
 if __name__ == '__main__':
     consumer(queue=None)
