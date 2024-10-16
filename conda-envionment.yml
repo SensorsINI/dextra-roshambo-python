@@ -1,4 +1,4 @@
-name: /home/tobi/Dropbox/GitHub/SensorsINI/dextra-roshambo-python/.conda
+name: dextra 
 channels:
   - defaults
 dependencies:
@@ -47,9 +47,8 @@ dependencies:
       - markupsafe==2.1.5
       - mdurl==0.1.2
       - namex==0.0.8
-      - numpy==1.19.5
+      - numpy
       - oauthlib==3.2.2
-      - onnx==1.16.0
       - opencv-python==4.9.0.80
       - opt-einsum==3.3.0
       - protobuf==3.20.3
@@ -63,9 +62,6 @@ dependencies:
       - rich==13.7.1
       - rsa==4.9
       - six==1.15.0
-      - tensorboard==2.11.2
-      - tensorboard-data-server==0.6.1
-      - tensorboard-plugin-wit==1.8.1
       - tensorflow==2.5.2
       - tensorflow-estimator==2.5.0
       - tensorflow-model-optimization==0.7.3
@@ -75,3 +71,8 @@ dependencies:
       - werkzeug==3.0.3
       - wrapt==1.12.1
       - zipp==3.18.2
+      - pyyaml==6.0.0
+      - matplotlib==3.5.1
+      - pyparsing==3.1.2
+      - kiwisolver==1.4.2
+      - six==1.15.0
