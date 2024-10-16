@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Exec=/home/dextra/Dropbox/GitHub/SensorsINI/dextra-roshambo-python/dextra.sh
+Name=Dextra
+GenericName=Dextra
+Comment=Run dextra demo
+Encoding=UTF-8
+Terminal=true
+Type=Application
+Categories=Application;Game;
