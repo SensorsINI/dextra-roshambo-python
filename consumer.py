@@ -3,10 +3,13 @@ consumer of DVS frames for classification of DVS frames
 Authors: Tobi Delbruck, Nov 2020
 """
 import argparse
+import asyncio
 import copy
 import glob
+import io
 import pickle
 import shutil
+from typing import Tuple
 import cv2
 import sys
 import keras.saving
@@ -30,6 +33,7 @@ from pathlib import Path
 import random
 from datetime import datetime # for hour of day for running demo 
 import csv
+import schedule
 
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
@@ -187,6 +191,7 @@ def consumer(queue:Queue):
     # logging
     museum_csv_logging_file=None
     museum_csv_writer=None
+    # museum_logging_lock=asyncio.Lock() # scheduled new files are created in main consumer thread
     museum_movements_since_last_log=0
     museum_last_minute_written=0
 
@@ -225,31 +230,41 @@ def consumer(queue:Queue):
         nonlocal last_cmd_sent
         nonlocal serial_port_instance
         nonlocal museum_csv_writer
+        nonlocal museum_csv_logging_file
+        # nonlocal museum_logging_lock
         nonlocal museum_movements_since_last_log
         nonlocal museum_last_minute_written
+        nonlocal frame_number
+        if serial_port_instance is None:
+            log.error(f'cannot send command {cmd}; null serial port')
+            return
         try:
+            if serial_port_instance is None:
+                serial_port_instance = open_serial_port(serial_port_name) # try opening it if it does not exist, maybe got replugged or lost power
             serial_port_instance.write(cmd)
             time_last_sent_cmd=time.time()
-            if museum_csv_writer:
-                if cmd!=last_cmd_sent:
-                    museum_movements_since_last_log+=1
-                    now=datetime.now()
-                    year=now.year
-                    weekday=now.weekday()
-                    hour=now.hour # hour of day
-                    minute=now.minute
-                    day_of_year = now.timetuple().tm_yday # day of year
-                    if minute<museum_last_minute_written or minute-museum_last_minute_written>=MUSEUM_LOGGING_INTERVAL_MINUTES:
-                        try:
-                            log.info(f'writing log entry\nyear {year}, day {day_of_year}, weekday {weekday}, hour {hour}, minute {minute}, movements {museum_movements_since_last_log}')
-                            museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute, museum_movements_since_last_log])
-                        except Exception as e:
-                            log.error(f'could not write to museum logging file: {e}')
-                        museum_movements_since_last_log=0
-                        museum_last_minute_written=minute
             last_cmd_sent=cmd
         except serial.serialutil.SerialException as e:
             log.error(f'Error writing to serial port {SERIAL_PORT}: {e}')
+        if museum_csv_writer:
+            if cmd!=last_cmd_sent:
+                museum_movements_since_last_log+=1
+                now=datetime.now()
+                minute=now.minute
+                if minute<museum_last_minute_written or minute-museum_last_minute_written>=MUSEUM_LOGGING_INTERVAL_MINUTES:
+                    year=now.year
+                    weekday=now.weekday()
+                    day_of_year = now.timetuple().tm_yday # day of year
+                    hour=now.hour # hour of day
+                    try:
+                        log.info(f'writing log entry\nyear {year}, day {day_of_year}, weekday {weekday}, hour {hour}, minute {minute}, movements {museum_movements_since_last_log}')
+                        museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute, museum_movements_since_last_log])
+                        museum_csv_logging_file.flush() # not needed if new log file closes previous one
+                    except Exception as e:
+                        log.error(f'could not write to museum logging file: {e}')
+                    museum_movements_since_last_log=0
+                    museum_last_minute_written=minute
+
 
     def maybe_show_demo_sequence():
         time_now=datetime.now().time()
@@ -285,6 +300,23 @@ def consumer(queue:Queue):
         except serial.serialutil.SerialException as e:
             log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_name}: {e}')
                 
+    def create_museum_csv_writer() ->None:
+        nonlocal museum_csv_logging_file
+        nonlocal museum_csv_writer
+        # nonlocal museum_logging_lock
+
+        if MUSEUM_LOGGING_FILE is None:
+            return
+        if not os.path.exists(MUSEUM_LOGGING_FILES_FOLDER):
+            os.mkdir(MUSEUM_LOGGING_FILES_FOLDER)
+        if museum_csv_logging_file:
+            museum_csv_logging_file.close()
+        museum_logging_file_name=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
+        museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
+        museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
+        museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'museum_movements_this_hour'])
+        log.info(f'created logging file {museum_logging_file_name}')
+        return
 
     parser = argparse.ArgumentParser(
         description='consumer: Consumes DVS frames for trixy to process', allow_abbrev=True,
@@ -312,28 +344,21 @@ def consumer(queue:Queue):
     interpreter, input_details, output_details=load_tflite_model(MODEL_DIR)
 
     # museum logging
-    if not MUSEUM_LOGGING_FILE is None and not MUSEUM_LOGGING_FILES_FOLDER is None:
-        # try:
-            if not os.path.exists(MUSEUM_LOGGING_FILES_FOLDER):
-                os.mkdir(MUSEUM_LOGGING_FILES_FOLDER)
-            museum_logging_file_name=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y%m%d-%H%M")+'.csv')
-            museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
-            museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
-            museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'museum_movements_this_hour'])
-            log.info(f'created logging file {museum_logging_file_name}')
-            if not SAVE_FRAMES_STORAGE_LOCATION is None and SAVE_FRAMES_INTERVAL>0:
-                save_frames_folder=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,SAVE_FRAMES_STORAGE_LOCATION)
-                if not os.path.exists(save_frames_folder):
-                    os.mkdir(save_frames_folder)
-                    log.info(f'made folder {save_frames_folder} to save sample frames')
-                    for symbol in SYMBOL_TO_PRED_DICT.keys():
-                        symfolder=os.path.join(save_frames_folder,symbol)
-                        if not os.path.exists(symfolder):
-                            os.mkdir(symfolder)
-                            log.info(f'made folder {symfolder}')
-        # except Exception as e:
-        #     log.error(f'could not open CSV file {MUSEUM_LOGGING_FILE}: {e}')
+    if not SAVE_FRAMES_STORAGE_LOCATION is None and SAVE_FRAMES_INTERVAL>0:
+        log.info(f"creating folders to hold sample frames that will be stored every {SAVE_FRAMES_INTERVAL} new classifications")
+        save_frames_folder=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,SAVE_FRAMES_STORAGE_LOCATION)
+        if not os.path.exists(save_frames_folder):
+            os.mkdir(save_frames_folder)
+            log.info(f'made folder {save_frames_folder} to save sample frames')
+            for symbol in SYMBOL_TO_PRED_DICT.keys():
+                symbol_folder_name=os.path.join(save_frames_folder,symbol)
+                if not os.path.exists(symbol_folder_name):
+                    os.mkdir(symbol_folder_name)
+                    log.info(f'made folder {symbol_folder_name} to hold sample classified frames')
 
+    create_museum_csv_writer()
+    # schedule.every().hour.do(create_museum_csv_writer)
+    schedule.every(MUSEUM_LOG_FILE_CREATION_INTERVAL_DAYS).days.do(create_museum_csv_writer)
 
     serial_port_name = args.serial_port
     serial_port_instance = open_serial_port(serial_port_name)
@@ -361,7 +386,7 @@ def consumer(queue:Queue):
 
     log.info('in display, hit x to exit or spacebar to show demo movement')
     while True:
-        timestr = time.strftime("%Y%m%d-%H%M")
+        # timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
         with Timer('overall consumer loop', numpy_file=None, show_hist=False):
             with Timer('recieve UDP'):
@@ -413,10 +438,7 @@ def consumer(queue:Queue):
                             save_frames_disabled=True
 
                 # now send a command if there is one and we have not sent too recently
-                if serial_port_instance is None:
-                       serial_port_instance = open_serial_port(serial_port_name) # try opening it if it does not exist, maybe got replugged or lost power
-
-                if not serial_port_instance is None and not cmd is None and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
+                if cmd and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
                     log.debug(f'sending cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_name}')
                     send_cmd(cmd)
 
@@ -436,11 +458,19 @@ def consumer(queue:Queue):
             dt=time.time()-timestamp
             with Timer('producer->consumer inference delay',delay=dt, show_hist=False):
                 pass
+        
+        schedule.run_pending() # new log file, etc
+        
+    if museum_csv_logging_file:
+        museum_csv_logging_file.close()
+        log.info(f'closed CSV action logging file {museum_csv_logging_file.name}')
+    
+    # end of consumer()
 
 def open_serial_port(serial_port_name):
     serial_port_instance=None
     if not serial_port_name is None:
-        log.info('opening serial port {} to send commands to finger'.format(serial_port_name))
+        log.debug('opening serial port {} to send commands to finger'.format(serial_port_name))
         try:
             serial_port_instance = serial.Serial(serial_port_name, 115200, timeout=5)
         except Exception as e:

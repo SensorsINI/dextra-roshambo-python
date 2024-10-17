@@ -58,13 +58,13 @@ SHOW_STATISTICS_AT_END=False # set True to show timing histograms
 
 # museum settings
 from datetime import datetime
-MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time()
+MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time() # start when attracting movements are shown
 MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
-MUSEUM_HAND_MOVEMENT_INTERVAL_M=5  # minutes between showing demo of RSP movement if no cmd has been sent
+MUSEUM_HAND_MOVEMENT_INTERVAL_M=3  # minutes between showing attracting movements of RSP movement if no cmd has been sent
 MUSEUM_LOGGING_FILES_FOLDER='logging'
-MUSEUM_LOGGING_FILE="roshambo-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
-MUSEUM_LOGGING_INTERVAL_MINUTES=10 # minutes between logging number of hand actions
-
+MUSEUM_LOGGING_FILE="dextra-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
+MUSEUM_LOGGING_INTERVAL_MINUTES=60 # minutes between logging number of hand actions
+MUSEUM_LOG_FILE_CREATION_INTERVAL_DAYS=1 # how many days between creating new activity CSV file
 # saving frames
 SAVE_FRAMES_INTERVAL=10
 SAVE_FRAMES_STORAGE_LOCATION='frames' # saved in logging folder too, in this subfolder
