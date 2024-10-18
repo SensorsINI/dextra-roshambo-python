@@ -19,14 +19,17 @@ from pyaer.dvs128 import DVS128
 
 
 LOGGING_LEVEL = logging.INFO
+LOG_DIR='logging'
+LOG_FILE='dextra-log' # base name of rotating log file; see consumer.py
+
 PORT = 12000  # UDP port used to send frames from producer to consumer
 IMSIZE = 64  # input image size, must match model
 UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / math.log(2))))
 
-CAMERA_TYPE=DVS128 # DAVIS when using DAVIS camera
-CAMERA_BIASES='./configs/davis346_config.json' if CAMERA_TYPE is DAVIS else './configs/dvs128_config.json'
+# camera type is automatically detected in open_camera()
+CAMERA_TYPES=[DVS128,DAVIS]
+CAMERA_TO_BIASES_DICT={'DVS128':'./configs/dvs128_config.json', 'DAVIS': './configs/davis346_config.json'}
 
-EVENT_COUNT_PER_FRAME = 1500 if CAMERA_TYPE is DVS128 else 5000  # events per frame
 EVENT_COUNT_CLIP_VALUE = 16  # full count value for colleting histograms of DVS events
 SHOW_DVS_OUTPUT = False # producer shows the accumulated DVS frames as aid for focus and alignment
 MIN_PRODUCER_FRAME_INTERVAL_MS=5.0 # inference takes about 3ms and normalization takes 1ms, hence at least 2ms
@@ -40,7 +43,6 @@ DATA_FOLDER = 'data' #'data'  # new samples stored here
 NUM_NON_JOKER_IMAGES_TO_SAVE_PER_JOKER = 3 # when joker detected by consumer, this many random previous nonjoker frames are also saved
 SERIAL_PORT = "/dev/ttyUSB0"  # port to talk to arduino finger controller
 
-LOG_DIR='logs'
 SRC_DATA_FOLDER = '/home/tobi/Downloads/dextra_roshambo/source_data'
 TRAIN_DATA_FOLDER='/home/tobi/Downloads/dextra_roshambo/training_dataset' # the actual training data that is produced by split from dataset_utils/make_train_valid_test()
 
@@ -61,8 +63,7 @@ from datetime import datetime
 MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time() # start when attracting movements are shown
 MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
 MUSEUM_HAND_MOVEMENT_INTERVAL_M=3  # minutes between showing attracting movements of RSP movement if no cmd has been sent
-MUSEUM_LOGGING_FILES_FOLDER='logging'
-MUSEUM_LOGGING_FILE="dextra-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
+MUSEUM_LOGGING_FILE="actions-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
 MUSEUM_LOGGING_INTERVAL_MINUTES=60 # minutes between logging number of hand actions
 MUSEUM_LOG_FILE_CREATION_INTERVAL_DAYS=1 # how many days between creating new activity CSV file
 # saving frames
@@ -146,18 +147,30 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
+class DuplicateFilter(logging.Filter):
 
+    def filter(self, record):
+        # add other fields if you need more granular comparison, depends on your app
+        current_log = (record.module, record.levelno, record.msg)
+        if current_log != getattr(self, "last_log", None):
+            self.last_log = current_log
+            return True
+        return False
+ 
 def my_logger(name):
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     logger = logging.getLogger(name)
     logger.setLevel(LOGGING_LEVEL)
     # create console handler
-    ch = logging.StreamHandler()
-    ch.setFormatter(CustomFormatter())
-    logger.addHandler(ch)
+    console_handler = logging.StreamHandler()
+    
+    console_handler.setFormatter(CustomFormatter())
+    logger.addHandler(console_handler)
+    logger.addFilter(DuplicateFilter())
     return logger
 
-
+# https://stackoverflow.com/questions/44691558/suppress-multiple-messages-with-same-content-in-python-logging-module-aka-log-co
+   
 log=my_logger(__name__)
 
 timers = {}

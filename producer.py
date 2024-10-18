@@ -6,6 +6,7 @@ Authors: Tobi Delbruck Nov 2020
 import atexit
 import pickle
 from pathlib import Path
+from typing import Optional, Union
 
 import cv2
 import sys
@@ -37,6 +38,7 @@ def producer(queue:Queue):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_address = ('', PORT)
 
+    EVENT_COUNT_PER_FRAME = 1500
 
 
     record=None
@@ -49,70 +51,76 @@ def producer(queue:Queue):
         log.info(f'recording frames to {recording_folder}')
         Path(recording_folder).mkdir(parents=True, exist_ok=True)
 
-    def open_camera():
+    def open_camera()->Optional[Union[DVS128,DAVIS]]:
         """ Opens the DAVIS camera, set biases, and returns device handle to it
         :return: device handle
         """
-        device = CAMERA_TYPE(noise_filter=True)
-        print("DVS USB ID:", device.device_id)
-        if device.device_is_master:
+        nonlocal EVENT_COUNT_PER_FRAME
+        dvs=None
+        for c in CAMERA_TYPES:
+            try:
+                dvs=c(noise_filter=True) # open the camera
+                log.info(f'opened camera {dvs}')
+                break
+            except Exception as e:
+                log.error(f'cannot open camera type {c}: {e}')
+        if dvs is None:
+            return None
+        
+        EVENT_COUNT_PER_FRAME = 1500 if dvs is DVS128 else 5000  # events per frame
+
+        print("DVS USB ID:", dvs.device_id)
+        if dvs.device_is_master:
             print("DVS is master.")
         else:
             print("DVS is slave.")
-        print("DVS Serial Number:", device.device_serial_number)
-        print("DVS String:", device.device_string)
-        print("DVS USB bus Number:", device.device_usb_bus_number)
-        print("DVS USB device address:", device.device_usb_device_address)
-        print("DVS size X:", device.dvs_size_X)
-        print("DVS size Y:", device.dvs_size_Y)
+        print("DVS Serial Number:", dvs.device_serial_number)
+        print("DVS String:", dvs.device_string)
+        print("DVS USB bus Number:", dvs.device_usb_bus_number)
+        print("DVS USB device address:", dvs.device_usb_device_address)
+        print("DVS size X:", dvs.dvs_size_X)
+        print("DVS size Y:", dvs.dvs_size_Y)
         try:
-            print("Logic Version:", device.logic_version)
+            print("Logic Version:", dvs.logic_version)
         except:
             print("DVS128 camera has no logic version information available")
         try:
             print("Background Activity Filter:",
-                device.dvs_has_background_activity_filter)
+                dvs.dvs_has_background_activity_filter)
         except:
             print("DVS128 has no background activity denoising filter")
         try:
-            print("Color Filter", device.aps_color_filter, type(device.aps_color_filter))
-            print(device.aps_color_filter == 1)
+            print("Color Filter", dvs.aps_color_filter, type(dvs.aps_color_filter))
+            print(dvs.aps_color_filter == 1)
         except:
             print("DVS128 has no color filter setting to print or set")
 
         # device.start_data_stream()
-        assert (device.send_default_config())
+        assert (dvs.send_default_config())
         # attempt to set up USB host buffers for acquisition thread to minimize latency
-        assert (device.set_config(
+        assert (dvs.set_config(
             libcaer.CAER_HOST_CONFIG_USB,
             libcaer.CAER_HOST_CONFIG_USB_BUFFER_NUMBER,
             8))
-        assert (device.set_config(
+        assert (dvs.set_config(
             libcaer.CAER_HOST_CONFIG_USB,
             libcaer.CAER_HOST_CONFIG_USB_BUFFER_SIZE,
             4096))
-        assert (device.data_start())
-        assert (device.set_config(
+        assert (dvs.data_start())
+        assert (dvs.set_config(
             libcaer.CAER_HOST_CONFIG_PACKETS,
             libcaer.CAER_HOST_CONFIG_PACKETS_MAX_CONTAINER_INTERVAL,
             1000)) # set max interval to this value in us. Set to not produce too many packets/sec here, not sure about reasoning
-        assert (device.set_data_exchange_blocking())
+        assert (dvs.set_data_exchange_blocking())
 
         # setting bias after data stream started
-        log.info(f'setting biases from {CAMERA_BIASES}')
-        device.set_bias_from_json(CAMERA_BIASES)
-        return device
+        bias_json_file=CAMERA_TO_BIASES_DICT[type(dvs).__name__]
+        log.info(f'setting biases from {bias_json_file}')
+        dvs.set_bias_from_json(bias_json_file)
+        return dvs
 
     dvs=None
-    while dvs is None:
-        try:
-            dvs=open_camera()
-        except Exception as e:
-            log.error(f'could not open DVS: {e}')
-            time.sleep(3)
 
-    xfac = float(IMSIZE) / dvs.dvs_size_X
-    yfac = float(IMSIZE) / dvs.dvs_size_Y
     histrange = [(0, v) for v in (IMSIZE, IMSIZE)]  # allocate DVS frame histogram to desired output size
     npix = IMSIZE * IMSIZE
     cv2_resized = False
@@ -132,9 +140,15 @@ def producer(queue:Queue):
     atexit.register(cleanup)
 
     try:
-        timestr = time.strftime("%Y%m%d-%H%M")
         numpy_file = None # TODO uncomment to save data f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
         while True:
+
+            if dvs is None:
+                dvs=open_camera()
+                if dvs is None:
+                    log.warning('coulud not open DVS camera')
+                    time.sleep(5)
+                    continue
 
             with Timer('overall producer frame rate', numpy_file=numpy_file , show_hist=SHOW_STATISTICS_AT_END) as timer_overall:
                 with Timer('accumulate DVS'):
@@ -161,6 +175,9 @@ def producer(queue:Queue):
                 with Timer('normalization'):
                     # if frame is None: # debug timing
                         # take DVS coordinates and scale x and y to output frame dimensions using flooring math
+                        xfac = float(IMSIZE) / dvs.dvs_size_X
+                        yfac = float(IMSIZE) / dvs.dvs_size_Y
+ 
                         events[:,1]=np.floor(events[:,1]*xfac)
                         events[:,2]=np.floor(events[:,2]*yfac)
                         frame, _, _ = np.histogram2d(events[:, 2], events[:, 1], bins=(IMSIZE, IMSIZE), range=histrange)

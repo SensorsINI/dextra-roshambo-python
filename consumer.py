@@ -7,6 +7,7 @@ import asyncio
 import copy
 import glob
 import io
+import logging.handlers
 import pickle
 import shutil
 from typing import Tuple
@@ -37,6 +38,7 @@ import schedule
 
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
+import logging
 log=my_logger(__name__)
 from numpy_loader import load_from_numpy
 
@@ -199,6 +201,14 @@ def consumer(queue:Queue):
     save_frames_last_frame_saved=0
     save_frames_disabled=False # set True when disk space falls below SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB
 
+    if LOG_FILE:
+        log.info('adding TimedRotatingFileHandler for logging consumer output')
+        fh = logging.handlers.TimedRotatingFileHandler(os.path.join(LOG_DIR,LOG_FILE),when="M",
+                                                       interval=1,
+                                                       backupCount=7) # todo increase
+        fh.setFormatter(CustomFormatter())
+        log.addHandler(fh)
+
     def show_frame(frame, name, resized_dict)->int:
         """ Show the frame in named cv2 window and handle resizing
 
@@ -236,7 +246,7 @@ def consumer(queue:Queue):
         nonlocal museum_last_minute_written
         nonlocal frame_number
         if serial_port_instance is None:
-            log.error(f'cannot send command {cmd}; null serial port')
+            log.error(f'cannot send command; null serial port')
             return
         try:
             if serial_port_instance is None:
@@ -307,11 +317,11 @@ def consumer(queue:Queue):
 
         if MUSEUM_LOGGING_FILE is None:
             return
-        if not os.path.exists(MUSEUM_LOGGING_FILES_FOLDER):
-            os.mkdir(MUSEUM_LOGGING_FILES_FOLDER)
+        if not os.path.exists(LOG_DIR):
+            os.mkdir(LOG_DIR)
         if museum_csv_logging_file:
             museum_csv_logging_file.close()
-        museum_logging_file_name=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
+        museum_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
         museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
         museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
         museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'museum_movements_this_hour'])
@@ -346,7 +356,7 @@ def consumer(queue:Queue):
     # museum logging
     if not SAVE_FRAMES_STORAGE_LOCATION is None and SAVE_FRAMES_INTERVAL>0:
         log.info(f"creating folders to hold sample frames that will be stored every {SAVE_FRAMES_INTERVAL} new classifications")
-        save_frames_folder=os.path.join(MUSEUM_LOGGING_FILES_FOLDER,SAVE_FRAMES_STORAGE_LOCATION)
+        save_frames_folder=os.path.join(LOG_DIR,SAVE_FRAMES_STORAGE_LOCATION)
         if not os.path.exists(save_frames_folder):
             os.mkdir(save_frames_folder)
             log.info(f'made folder {save_frames_folder} to save sample frames')
