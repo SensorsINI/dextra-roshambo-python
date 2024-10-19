@@ -196,7 +196,7 @@ def consumer(queue:Queue):
     museum_csv_writer=None
     # museum_logging_lock=asyncio.Lock() # scheduled new files are created in main consumer thread
     museum_movements_since_last_log=0
-    museum_last_minute_written=0
+    museum_last_time_written_sec=0
 
     save_frames_folder=None
     save_frames_last_frame_saved=0
@@ -244,7 +244,7 @@ def consumer(queue:Queue):
         nonlocal museum_csv_logging_file
         # nonlocal museum_logging_lock
         nonlocal museum_movements_since_last_log
-        nonlocal museum_last_minute_written
+        nonlocal museum_last_time_written_sec
         nonlocal frame_number
         if serial_port_instance is None:
             log.error(f'cannot send command; null serial port')
@@ -261,20 +261,21 @@ def consumer(queue:Queue):
             if cmd!=last_cmd_sent:
                 museum_movements_since_last_log+=1
                 now=datetime.now()
-                minute=now.minute
-                if minute<museum_last_minute_written or minute-museum_last_minute_written>=MUSEUM_LOGGING_INTERVAL_MINUTES:
+                minutes_since_last=(int(time.time())-museum_last_time_written_sec)/60
+                if minutes_since_last>=MUSEUM_LOGGING_INTERVAL_MINUTES:
                     year=now.year
                     weekday=now.weekday()
                     day_of_year = now.timetuple().tm_yday # day of year
                     hour=now.hour # hour of day
+                    minute=now.minute
+                    
                     try:
-                        log.info(f'writing log entry\nyear {year}, day {day_of_year}, weekday {weekday}, hour {hour}, minute {minute}, movements {museum_movements_since_last_log}')
-                        museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute, museum_movements_since_last_log])
+                        museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
                         museum_csv_logging_file.flush() # not needed if new log file closes previous one
                     except Exception as e:
                         log.error(f'could not write to museum logging file: {e}')
                     museum_movements_since_last_log=0
-                    museum_last_minute_written=minute
+                    museum_last_time_written_sec=int(time.time())
 
 
     def maybe_show_demo_sequence():
@@ -325,7 +326,7 @@ def consumer(queue:Queue):
         museum_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
         museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
         museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
-        museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'museum_movements_this_hour'])
+        museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'minutes_since_last' 'museum_movements_this_hour'])
         log.info(f'created logging file {museum_logging_file_name}')
         return
 
