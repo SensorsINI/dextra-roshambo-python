@@ -1,7 +1,6 @@
 """ Shared stuff between producer and consumer
  Author: Tobi Delbruck
  """
-import logging
 import math
 import os
 import sys
@@ -16,9 +15,11 @@ from matplotlib import pyplot as plt
 import numpy as np
 from pyaer.davis import DAVIS
 from pyaer.dvs128 import DVS128
+from my_logger import my_logger
+
+log=my_logger(__name__)
 
 
-LOGGING_LEVEL = logging.INFO
 LOG_DIR='logging'
 LOG_FILE='dextra-log' # base name of rotating log file; see consumer.py
 
@@ -40,7 +41,6 @@ MAX_SHOWN_DVS_FRAME_RATE_HZ=15 # limits cv2 rendering of DVS frames to reduce lo
 FULLSCREEN=True # for kiosk demo autostart
 
 DATA_FOLDER = 'data' #'data'  # new samples stored here
-NUM_NON_JOKER_IMAGES_TO_SAVE_PER_JOKER = 3 # when joker detected by consumer, this many random previous nonjoker frames are also saved
 SERIAL_PORT = "/dev/ttyUSB0"  # port to talk to arduino finger controller
 
 SRC_DATA_FOLDER = '/home/tobi/Downloads/dextra_roshambo/source_data'
@@ -123,55 +123,6 @@ def yes_or_no(question, default='y', timeout=None):
             return True
         if reply[0].lower() == 'n':
             return False
-
-class CustomFormatter(logging.Formatter):
-    """Logging Formatter to add colors and count warning / errors"""
-
-    grey = "\x1b[38;21m"
-    yellow = "\x1b[33;21m"
-    red = "\x1b[31;21m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
-
-    FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: grey + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
-        return formatter.format(record)
-
-class DuplicateFilter(logging.Filter):
-
-    def filter(self, record):
-        # add other fields if you need more granular comparison, depends on your app
-        current_log = (record.module, record.levelno, record.msg)
-        if current_log != getattr(self, "last_log", None):
-            self.last_log = current_log
-            return True
-        return False
- 
-def my_logger(name):
-    # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    logger = logging.getLogger(name)
-    logger.setLevel(LOGGING_LEVEL)
-    # create console handler
-    console_handler = logging.StreamHandler()
-    
-    console_handler.setFormatter(CustomFormatter())
-    logger.addHandler(console_handler)
-    logger.addFilter(DuplicateFilter())
-    return logger
-
-# https://stackoverflow.com/questions/44691558/suppress-multiple-messages-with-same-content-in-python-logging-module-aka-log-co
-   
-log=my_logger(__name__)
 
 timers = {}
 times = {}
@@ -260,25 +211,6 @@ def print_timing_info():
             plt.ylabel('frequency')
             plt.title(k)
             plt.show()
-
-def write_next_image(dir:str, idx:int, img):
-    """ Saves data sample image
-
-    :param dir: the folder
-    :param idx: the current index number
-    :param img: the image to save, which should be monochrome uint8 and which is saved as default png format
-    :returns: the next index
-    """
-    while True:
-        n=f'{dir}/{idx:04d}.png'
-        if not os.path.isfile(n):
-            break
-        idx+=1
-    try:
-        cv2.imwrite(n, img)
-    except Exception as e:
-        log.error(f'error saving {n}: caught {e}')
-    return idx
 
 # this will print all the timer values upon termination of any program that imported this file
 atexit.register(print_timing_info)

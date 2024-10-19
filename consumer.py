@@ -1,6 +1,6 @@
 """
 consumer of DVS frames for classification of DVS frames
-Authors: Tobi Delbruck, Nov 2020
+Authors: Tobi Delbruck, Nov 2020, Oct 2024
 """
 import argparse
 import asyncio
@@ -39,6 +39,7 @@ import schedule
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
 import logging
+from my_logger import my_logger
 log=my_logger(__name__)
 from numpy_loader import load_from_numpy
 

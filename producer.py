@@ -1,6 +1,6 @@
 """
-producer of DVS frames for classification of joker/nonjoker by consumer processs
-Authors: Tobi Delbruck Nov 2020
+producer of DVS frames for classification of hand symbols by consumer processs
+Authors: Tobi Delbruck Nov 2020, Oct 2024
 """
 
 import atexit
@@ -25,7 +25,7 @@ from pyaer.davis import DAVIS
 from pyaer.dvs128 import DVS128
 
 from pyaer import libcaer
-
+from my_logger import my_logger
 log=my_logger(__name__)
 
 
@@ -63,7 +63,7 @@ def producer(queue:Queue):
                 log.info(f'opened camera {dvs}')
                 break
             except Exception as e:
-                log.error(f'cannot open camera type {c}: {e}')
+                log.warning(f'cannot open camera type {c}: {e}')
         if dvs is None:
             return None
         
@@ -119,6 +119,25 @@ def producer(queue:Queue):
         dvs.set_bias_from_json(bias_json_file)
         return dvs
 
+    def write_next_image(dir:str, idx:int, img):
+        """ Saves data sample image
+
+        :param dir: the folder
+        :param idx: the current index number
+        :param img: the image to save, which should be monochrome uint8 and which is saved as default png format
+        :returns: the next index
+        """
+        while True:
+            n=f'{dir}/{idx:04d}.png'
+            if not os.path.isfile(n):
+                break
+            idx+=1
+        try:
+            cv2.imwrite(n, img)
+        except Exception as e:
+            log.error(f'error saving {n}: caught {e}')
+        return idx
+
     dvs=None
 
     histrange = [(0, v) for v in (IMSIZE, IMSIZE)]  # allocate DVS frame histogram to desired output size
@@ -146,7 +165,6 @@ def producer(queue:Queue):
             if dvs is None:
                 dvs=open_camera()
                 if dvs is None:
-                    log.warning('coulud not open DVS camera')
                     time.sleep(5)
                     continue
 
