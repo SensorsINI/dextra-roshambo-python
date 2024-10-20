@@ -39,7 +39,7 @@ import schedule
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
 import logging
-from my_logger import my_logger
+from my_logger import my_logger, CustomFormatter
 log=my_logger(__name__)
 from numpy_loader import load_from_numpy
 
@@ -211,10 +211,11 @@ def consumer(queue:Queue):
             log.info(f'Consumer is alive at {datetime.now()}')
 
     if LOG_FILE:
-        log.info('adding TimedRotatingFileHandler for logging consumer output')
-        fh = logging.handlers.TimedRotatingFileHandler(os.path.join(LOG_DIR,LOG_FILE),when="H",
-                                                       interval=MUSEUM_LOG_FILE_CREATION_INTERVAL_HOURS,
-                                                       backupCount=7) # todo increase
+        path=os.path.join(LOG_DIR,LOG_FILE)
+        log.info(f'adding TimedRotatingFileHandler for logging consumer output to {path} rotated every {MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h with backup count 100 files')
+        fh = logging.handlers.TimedRotatingFileHandler(path,when="H",
+                                                       interval=MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS,
+                                                       backupCount=100) 
         fh.setFormatter(CustomFormatter())
         log.addHandler(fh)
 
@@ -289,18 +290,8 @@ def consumer(queue:Queue):
     def maybe_show_demo_sequence():
         time_now=datetime.now().time()
         if time_now>MUSEUM_OPENING_TIME and time_now<MUSEUM_CLOSING_TIME:
-            now=time.time()
-
-            nonlocal time_last_showed_demo_movement
-            nonlocal time_last_sent_cmd
-            time_interval=now-time_last_showed_demo_movement
-            if time_interval>MUSEUM_HAND_MOVEMENT_INTERVAL_M*60 \
-                    and now-time_last_sent_cmd>MUSEUM_HAND_MOVEMENT_INTERVAL_M*60:
-                
-                time_last_showed_demo_movement=now
-                
-                log.debug(f'showing demo movement because {MUSEUM_HAND_MOVEMENT_INTERVAL_M} minutes since last demo movement')
-                show_demo_sequence()
+            log.debug(f'showing demo movement because {MUSEUM_HAND_MOVEMENT_INTERVAL_M} minutes since last demo movement')
+            show_demo_sequence()
 
 
     def show_demo_sequence():
@@ -377,9 +368,13 @@ def consumer(queue:Queue):
                     log.info(f'made folder {symbol_folder_name} to hold sample classified frames')
 
     create_museum_csv_writer()
-    # schedule.every().hour.do(create_museum_csv_writer)
-    schedule.every(MUSEUM_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
+    log.info(f'scheduling new actions CSV file every MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS={MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h')
+    schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
+    log.info(f"scheduling 'I am alive' logging every MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES={MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES).minutes.do(log_i_am_alive_message)
+    log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_HAND_MOVEMENT_INTERVAL_M}m")
+    schedule.every(MUSEUM_HAND_MOVEMENT_INTERVAL_M).minutes.do(maybe_show_demo_sequence)
+    
 
     serial_port_name = args.serial_port
     serial_port_instance = open_serial_port(serial_port_name)
@@ -410,6 +405,9 @@ def consumer(queue:Queue):
         # timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
         with Timer('overall consumer loop', numpy_file=None, show_hist=False):
+            
+            schedule.run_pending() # new log file, I am alive, demo_sequence
+
             with Timer('recieve UDP'):
                 try:
                     receive_data = server_socket.recv(UDP_BUFFER_SIZE)
@@ -466,25 +464,25 @@ def consumer(queue:Queue):
 
             cv2.putText(img, pred_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
             k=show_frame( 1 - img.astype('float') / 255,'RoshamboCNN',resized_dict)
-            if k==ord('x'):
+            if k==ord('x') or k==27: # 'x' or ESC quits
+                log.info('Exiting main loop in response to x key')
                 break
             elif k == ord('p'):
                 print_timing_info()
             elif k==ord(' '):
                 show_demo_sequence()
 
-            maybe_show_demo_sequence()
 
             # save time since frame sent from producer
             dt=time.time()-timestamp
             with Timer('producer->consumer inference delay',delay=dt, show_hist=False):
                 pass
         
-        schedule.run_pending() # new log file, etc
-        
+
     if museum_csv_logging_file:
         museum_csv_logging_file.close()
         log.info(f'closed CSV action logging file {museum_csv_logging_file.name}')
+    log.info('Ending consumer')    
     
     # end of consumer()
 
