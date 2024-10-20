@@ -64,8 +64,10 @@ MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time() # start when attra
 MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
 MUSEUM_HAND_MOVEMENT_INTERVAL_M=3  # minutes between showing attracting movements of RSP movement if no cmd has been sent
 MUSEUM_LOGGING_FILE="actions-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
-MUSEUM_LOGGING_INTERVAL_MINUTES=60 # minutes between logging number of hand actions
+MUSEUM_LOGGING_INTERVAL_MINUTES=10 # minutes between logging number of hand actions
 MUSEUM_LOG_FILE_CREATION_INTERVAL_HOURS=4 # how many hours between creating new activity CSV file
+MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES=10 # how many minutes between logging "I'm alive" messages
+
 # saving frames
 SAVE_FRAMES_INTERVAL=10
 SAVE_FRAMES_STORAGE_LOCATION='frames' # saved in logging folder too, in this subfolder

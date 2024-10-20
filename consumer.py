@@ -196,11 +196,19 @@ def consumer(queue:Queue):
     museum_csv_writer=None
     # museum_logging_lock=asyncio.Lock() # scheduled new files are created in main consumer thread
     museum_movements_since_last_log=0
-    museum_last_time_written_sec=0
+    museum_last_time_movements_written_sec=0
+    museum_last_i_am_alive_log_time_sec=0
 
     save_frames_folder=None
     save_frames_last_frame_saved=0
     save_frames_disabled=False # set True when disk space falls below SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB
+
+    def log_i_am_alive_message():
+        nonlocal museum_last_i_am_alive_log_time_sec
+        now=time.time()
+        if now-museum_last_i_am_alive_log_time_sec>MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES*60:
+            museum_last_i_am_alive_log_time_sec=now
+            log.info(f'Consumer is alive at {datetime.now()}')
 
     if LOG_FILE:
         log.info('adding TimedRotatingFileHandler for logging consumer output')
@@ -244,7 +252,7 @@ def consumer(queue:Queue):
         nonlocal museum_csv_logging_file
         # nonlocal museum_logging_lock
         nonlocal museum_movements_since_last_log
-        nonlocal museum_last_time_written_sec
+        nonlocal museum_last_time_movements_written_sec
         nonlocal frame_number
         if serial_port_instance is None:
             log.error(f'cannot send command; null serial port')
@@ -261,7 +269,7 @@ def consumer(queue:Queue):
             if cmd!=last_cmd_sent:
                 museum_movements_since_last_log+=1
                 now=datetime.now()
-                minutes_since_last=(int(time.time())-museum_last_time_written_sec)/60
+                minutes_since_last=(int(time.time())-museum_last_time_movements_written_sec)/60
                 if minutes_since_last>=MUSEUM_LOGGING_INTERVAL_MINUTES:
                     year=now.year
                     weekday=now.weekday()
@@ -275,7 +283,7 @@ def consumer(queue:Queue):
                     except Exception as e:
                         log.error(f'could not write to museum logging file: {e}')
                     museum_movements_since_last_log=0
-                    museum_last_time_written_sec=int(time.time())
+                    museum_last_time_movements_written_sec=int(time.time())
 
 
     def maybe_show_demo_sequence():
@@ -371,6 +379,7 @@ def consumer(queue:Queue):
     create_museum_csv_writer()
     # schedule.every().hour.do(create_museum_csv_writer)
     schedule.every(MUSEUM_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
+    schedule.every(MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES).minutes.do(log_i_am_alive_message)
 
     serial_port_name = args.serial_port
     serial_port_instance = open_serial_port(serial_port_name)
