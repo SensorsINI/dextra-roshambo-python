@@ -16,12 +16,15 @@ import numpy as np
 from pyaer.davis import DAVIS
 from pyaer.dvs128 import DVS128
 from my_logger import my_logger
+import platform # hostname for unique log file name
 
 log=my_logger(__name__)
 
 
+
 LOG_DIR='logging'
-LOG_FILE='dextra-log' # base name of rotating log file; see consumer.py
+
+LOG_FILE='dextra-logging-'+platform.node() # base name of rotating log file; see consumer.py
 
 PORT = 12000  # UDP port used to send frames from producer to consumer
 IMSIZE = 64  # input image size, must match model
