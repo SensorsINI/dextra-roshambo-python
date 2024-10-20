@@ -204,8 +204,8 @@ def consumer(queue:Queue):
 
     if LOG_FILE:
         log.info('adding TimedRotatingFileHandler for logging consumer output')
-        fh = logging.handlers.TimedRotatingFileHandler(os.path.join(LOG_DIR,LOG_FILE),when="M",
-                                                       interval=1,
+        fh = logging.handlers.TimedRotatingFileHandler(os.path.join(LOG_DIR,LOG_FILE),when="H",
+                                                       interval=MUSEUM_LOG_FILE_CREATION_INTERVAL_HOURS,
                                                        backupCount=7) # todo increase
         fh.setFormatter(CustomFormatter())
         log.addHandler(fh)
