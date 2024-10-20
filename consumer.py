@@ -255,6 +255,10 @@ def consumer(queue:Queue):
         nonlocal museum_movements_since_last_log
         nonlocal museum_last_time_movements_written_sec
         nonlocal frame_number
+        if cmd!=last_cmd_sent:
+            museum_movements_since_last_log+=1
+            last_cmd_sent=cmd
+
         if serial_port_instance is None:
             log.error(f'cannot send command; null serial port')
             return
@@ -263,28 +267,30 @@ def consumer(queue:Queue):
                 serial_port_instance = open_serial_port(serial_port_name) # try opening it if it does not exist, maybe got replugged or lost power
             serial_port_instance.write(cmd)
             time_last_sent_cmd=time.time()
-            last_cmd_sent=cmd
         except serial.serialutil.SerialException as e:
             log.error(f'Error writing to serial port {SERIAL_PORT}: {e}')
-        if museum_csv_writer:
-            if cmd!=last_cmd_sent:
-                museum_movements_since_last_log+=1
-                now=datetime.now()
-                minutes_since_last=(int(time.time())-museum_last_time_movements_written_sec)/60
-                if minutes_since_last>=MUSEUM_LOGGING_INTERVAL_MINUTES:
-                    year=now.year
-                    weekday=now.weekday()
-                    day_of_year = now.timetuple().tm_yday # day of year
-                    hour=now.hour # hour of day
-                    minute=now.minute
-                    
-                    try:
-                        museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
-                        museum_csv_logging_file.flush() # not needed if new log file closes previous one
-                    except Exception as e:
-                        log.error(f'could not write to museum logging file: {e}')
-                    museum_movements_since_last_log=0
-                    museum_last_time_movements_written_sec=int(time.time())
+    
+    def write_actions_to_csv():
+        nonlocal museum_movements_since_last_log
+        nonlocal museum_csv_writer
+        nonlocal museum_last_time_movements_written_sec
+        
+        if museum_csv_writer is None:
+            return
+        now=datetime.now()
+        minutes_since_last=(int(time.time())-museum_last_time_movements_written_sec)/60
+        year=now.year
+        weekday=now.weekday()
+        day_of_year = now.timetuple().tm_yday # day of year
+        hour=now.hour # hour of day
+        minute=now.minute
+        
+        try:
+            museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
+        except Exception as e:
+            log.error(f'could not write to museum logging file: {e}')
+        museum_movements_since_last_log=0
+        museum_last_time_movements_written_sec=int(time.time())
 
 
     def maybe_show_demo_sequence():
@@ -292,6 +298,8 @@ def consumer(queue:Queue):
         if time_now>MUSEUM_OPENING_TIME and time_now<MUSEUM_CLOSING_TIME:
             log.debug(f'showing demo movement because {MUSEUM_HAND_MOVEMENT_INTERVAL_M} minutes since last demo movement')
             show_demo_sequence()
+        else:
+            log.info(f'not showing demo sequence because we are outside museum opening hours {MUSEUM_OPENING_TIME} to {MUSEUM_CLOSING_TIME}')
 
 
     def show_demo_sequence():
@@ -368,10 +376,12 @@ def consumer(queue:Queue):
                     log.info(f'made folder {symbol_folder_name} to hold sample classified frames')
 
     create_museum_csv_writer()
-    log.info(f'scheduling new actions CSV file every MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS={MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h')
-    schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
     log.info(f"scheduling 'I am alive' logging every MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES={MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES).minutes.do(log_i_am_alive_message)
+    log.info(f'scheduling new actions CSV file every MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS={MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h')
+    schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
+    log.info(f"scheduling hand action count every MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES={MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES}m")
+    schedule.every(MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES).minutes.do(write_actions_to_csv)
     log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_HAND_MOVEMENT_INTERVAL_M}m")
     schedule.every(MUSEUM_HAND_MOVEMENT_INTERVAL_M).minutes.do(maybe_show_demo_sequence)
     
