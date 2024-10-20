@@ -317,12 +317,12 @@ def consumer(queue:Queue):
         nonlocal museum_csv_writer
         # nonlocal museum_logging_lock
 
+        if museum_csv_logging_file:
+            museum_csv_logging_file.close()
         if MUSEUM_LOGGING_FILE is None:
             return
         if not os.path.exists(LOG_DIR):
             os.mkdir(LOG_DIR)
-        if museum_csv_logging_file:
-            museum_csv_logging_file.close()
         museum_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
         museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
         museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
@@ -370,7 +370,7 @@ def consumer(queue:Queue):
 
     create_museum_csv_writer()
     # schedule.every().hour.do(create_museum_csv_writer)
-    schedule.every(MUSEUM_LOG_FILE_CREATION_INTERVAL_DAYS).days.do(create_museum_csv_writer)
+    schedule.every(MUSEUM_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
 
     serial_port_name = args.serial_port
     serial_port_instance = open_serial_port(serial_port_name)
