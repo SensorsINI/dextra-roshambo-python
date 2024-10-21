@@ -67,7 +67,14 @@ def producer(queue:Queue):
         if dvs is None:
             return None
         
-        EVENT_COUNT_PER_FRAME = 1500 if dvs is DVS128 else 5000  # events per frame
+        EVENT_COUNT_PER_FRAME=None
+        if type(dvs) is DVS128:
+            EVENT_COUNT_PER_FRAME=1500 
+        elif type(dvs) is DAVIS:
+            EVENT_COUNT_PER_FRAME=5000
+        else:
+            raise Exception(f'{dvs} type is unknown')
+        log.info(f'set accumulated event count/frame to {EVENT_COUNT_PER_FRAME} for camera {dvs}')
 
         print("DVS USB ID:", dvs.device_id)
         if dvs.device_is_master:
