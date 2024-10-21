@@ -65,7 +65,7 @@ SHOW_STATISTICS_AT_END=False # set True to show timing histograms
 from datetime import datetime
 MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time() # start when attracting movements are shown
 MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
-MUSEUM_HAND_MOVEMENT_INTERVAL_M=3  # minutes between showing attracting movements of RSP movement if no cmd has been sent
+MUSEUM_DEMO_MOVEMENT_INTERVAL_M=3  # minutes between showing attracting movements of RSP movement if no cmd has been sent
 MUSEUM_LOGGING_FILE="actions-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
 MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES=10 # minutes between logging number of hand actions
 MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS=4 # how many hours between creating new activity CSV file
