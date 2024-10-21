@@ -296,17 +296,16 @@ def consumer(queue:Queue):
     def maybe_show_demo_sequence():
         time_now=datetime.now().time()
         if time_now>MUSEUM_OPENING_TIME and time_now<MUSEUM_CLOSING_TIME:
-            log.debug(f'showing demo movement because {MUSEUM_HAND_MOVEMENT_INTERVAL_M} minutes since last demo movement')
+            log.debug(f'showing demo movement because {MUSEUM_DEMO_MOVEMENT_INTERVAL_M} minutes since last demo movement')
             show_demo_sequence()
         else:
-            log.info(f'not showing demo sequence because we are outside museum opening hours {MUSEUM_OPENING_TIME} to {MUSEUM_CLOSING_TIME}')
+            log.debug(f'not showing demo sequence because we are outside museum opening hours {MUSEUM_OPENING_TIME} to {MUSEUM_CLOSING_TIME}')
 
 
     def show_demo_sequence():
         if serial_port_instance is None:
             log.warning('cannot show demo sequence, serial port is None')
             return
-        log.debug('showing demo sequence')
         cmds=[b'3',b'2',b'1'] # 3=rock, 1=paper, 2=scissors
         interval_seconds=.6
 
@@ -333,7 +332,7 @@ def consumer(queue:Queue):
         museum_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
         museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
         museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
-        museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'minutes_since_last' 'museum_movements_this_hour'])
+        museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'elapsed_minutes', 'actions'])
         log.info(f'created logging file {museum_logging_file_name}')
         return
 
@@ -364,9 +363,9 @@ def consumer(queue:Queue):
 
     # museum logging
     if not SAVE_FRAMES_STORAGE_LOCATION is None and SAVE_FRAMES_INTERVAL>0:
-        log.info(f"creating folders to hold sample frames that will be stored every {SAVE_FRAMES_INTERVAL} new classifications")
         save_frames_folder=os.path.join(LOG_DIR,SAVE_FRAMES_STORAGE_LOCATION)
         if not os.path.exists(save_frames_folder):
+            log.info(f"creating folders to hold sample frames that will be stored every {SAVE_FRAMES_INTERVAL} new classifications")
             os.mkdir(save_frames_folder)
             log.info(f'made folder {save_frames_folder} to save sample frames')
             for symbol in SYMBOL_TO_PRED_DICT.keys():
@@ -382,9 +381,12 @@ def consumer(queue:Queue):
     schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
     log.info(f"scheduling hand action count every MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES={MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES).minutes.do(write_actions_to_csv)
-    log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_HAND_MOVEMENT_INTERVAL_M}m")
-    schedule.every(MUSEUM_HAND_MOVEMENT_INTERVAL_M).minutes.do(maybe_show_demo_sequence)
+    log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_DEMO_MOVEMENT_INTERVAL_M}m")
+    schedule.every(MUSEUM_DEMO_MOVEMENT_INTERVAL_M).minutes.do(maybe_show_demo_sequence)
     
+    # logging.basicConfig()
+    # schedule_logger = logging.getLogger('schedule')
+    # schedule_logger.setLevel(level=logging.INFO)
 
     serial_port_name = args.serial_port
     serial_port_instance = open_serial_port(serial_port_name)
@@ -414,9 +416,10 @@ def consumer(queue:Queue):
     while True:
         # timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
+        schedule.run_pending() # new log file, I am alive, demo_sequence
+        
         with Timer('overall consumer loop', numpy_file=None, show_hist=False):
             
-            schedule.run_pending() # new log file, I am alive, demo_sequence
 
             with Timer('recieve UDP'):
                 try:
@@ -428,8 +431,6 @@ def consumer(queue:Queue):
                         break
                     elif k==ord(' '):
                         show_demo_sequence()
-                    else:
-                        maybe_show_demo_sequence()
                     continue
 
 
