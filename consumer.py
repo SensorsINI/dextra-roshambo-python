@@ -308,11 +308,10 @@ def consumer(queue:Queue):
             return
         cmds=[b'3',b'2',b'1'] # 3=rock, 1=paper, 2=scissors
         interval_seconds=.6
-
+        log.debug('showing demo sequence')
         try:
             for c in cmds:
-                serial_port_instance.write(c)
-                log.debug(f'sent {c}, sleeping {interval_seconds}s')
+                send_cmd(c)
                 time.sleep(interval_seconds)
 
         except serial.serialutil.SerialException as e:
