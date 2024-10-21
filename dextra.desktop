@@ -1,10 +1,11 @@
 [Desktop Entry]
+Type=Application
 Version=1.0
-Exec=/home/dextra/Dropbox/GitHub/SensorsINI/dextra-roshambo-python/dextra.sh
+Exec=gnome-terminal --command ~/Dropbox/GitHub/SensorsINI/dextra-roshambo-python/dextra.sh
+Hidden=false
 Name=Dextra
+X-GNOME-Autostart-enabled=true
 GenericName=Dextra
 Comment=Run dextra demo
 Encoding=UTF-8
 Terminal=true
-Type=Application
-Categories=Application;Game;
