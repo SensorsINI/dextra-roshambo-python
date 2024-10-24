@@ -1,3 +1,4 @@
 **/__pycache__/*
 sample_frames/*.png
 logging/*
+test_logging.py
