@@ -79,9 +79,14 @@ def plot_data():
     total_moves=np.sum(moves)
     total_days=np.max(year_frac_days)-np.min(year_frac_days)
     moves_per_day=total_moves/total_days
-    t=f'{date_start.strftime("%Y-%b-%d")} to {date_end.strftime("%Y-%b-%d")}\n{total_days:.1f}d: {total_moves:,} movements ({moves_per_day:.1f} moves/d)\nGenerated {date_now}'
-    print(t)
+    t=f'{date_start.strftime("%Y-%b-%d")} to {date_end.strftime("%Y-%b-%d")}\n{total_days:.1f}d: {total_moves:,} movements ({moves_per_day:.1f} moves/d)\nGenerated {date_now.strftime("%a %Y-%b-%d %H:%M")}'
     plt.text(.1,np.min(int_weeks)+.1,t, color='b', fontsize=12)
+    print(t)
+    
+    day_of_week_now=date_now.hour/24+(date_now.weekday()+8)%7 # sunday is zero
+    week=int(date_now.strftime("%U"))
+
+    plt.plot([day_of_week_now,day_of_week_now],[week,week+1],'r')
     plt.draw()
 
 plt.ion()
