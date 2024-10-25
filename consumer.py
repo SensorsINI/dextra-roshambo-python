@@ -363,11 +363,11 @@ def consumer(queue:Queue):
                     os.mkdir(symbol_folder_name)
                     log.info(f'made folder {symbol_folder_name} to hold sample classified frames')
 
-    museum_csv_actions_logging_file_name=create_museum_actions_logging_csv_file()
     log.info(f"scheduling 'I am alive' logging every MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES={MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES).minutes.do(log_i_am_alive_message)
     # log.info(f'scheduling new actions CSV file every MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS={MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h')
     # schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_actions_logging_csv_file)
+    museum_csv_actions_logging_file_name=create_museum_actions_logging_csv_file()
     log.info(f"scheduling hand action count every MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES={MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES).minutes.do(write_actions_to_csv)
     log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_DEMO_MOVEMENT_INTERVAL_M}m")

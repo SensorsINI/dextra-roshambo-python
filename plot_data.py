@@ -6,7 +6,7 @@ from glob import glob
 from numpy import genfromtxt
 import numpy as np
 import matplotlib.ticker as plticker
-from matplotlib_scalebar.scalebar import ScaleBar
+# from matplotlib_scalebar.scalebar import ScaleBar
 import datetime
 import time
 
