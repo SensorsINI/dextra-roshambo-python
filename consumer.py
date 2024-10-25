@@ -13,8 +13,8 @@ import shutil
 from typing import Tuple
 import cv2
 import sys
-import keras.saving
-import keras.saving
+# import keras.saving
+# import keras.saving
 import tensorflow as tf
 # from keras.models import load_model
 
@@ -186,15 +186,11 @@ def consumer(queue:Queue):
     time_last_sent_cmd=time.time()
     last_cmd_sent=None # to track changes of cmd for logging
     last_prediction_name=None # to track changes prediction of human hand symbol name
-    time_last_showed_demo_movement=time.time()
     serial_port_instance=None
     last_frame_number=0
-    cv2_resized=False
     resized_dict={}
     # logging
-    museum_csv_logging_file=None
-    museum_csv_writer=None
-    # museum_logging_lock=asyncio.Lock() # scheduled new files are created in main consumer thread
+    museum_csv_actions_logging_file_name=None
     museum_movements_since_last_log=0
     museum_last_time_movements_written_sec=0
     museum_last_i_am_alive_log_time_sec=0
@@ -249,9 +245,6 @@ def consumer(queue:Queue):
         nonlocal time_last_sent_cmd
         nonlocal last_cmd_sent
         nonlocal serial_port_instance
-        nonlocal museum_csv_writer
-        nonlocal museum_csv_logging_file
-        # nonlocal museum_logging_lock
         nonlocal museum_movements_since_last_log
         nonlocal museum_last_time_movements_written_sec
         nonlocal frame_number
@@ -272,10 +265,10 @@ def consumer(queue:Queue):
     
     def write_actions_to_csv():
         nonlocal museum_movements_since_last_log
-        nonlocal museum_csv_writer
         nonlocal museum_last_time_movements_written_sec
+        nonlocal museum_csv_actions_logging_file_name
         
-        if museum_csv_writer is None:
+        if museum_csv_actions_logging_file_name is None:
             return
         now=datetime.now()
         minutes_since_last=(int(time.time())-museum_last_time_movements_written_sec)/60
@@ -286,9 +279,11 @@ def consumer(queue:Queue):
         minute=now.minute
         
         try:
-            museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
+            with open(museum_csv_actions_logging_file_name,'a',newline='') as museum_csv_logging_file:
+                museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
+                museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
         except Exception as e:
-            log.error(f'could not write to museum logging file: {e}')
+            log.error(f'could not write action count to {museum_csv_actions_logging_file_name}: {e}')
         museum_movements_since_last_log=0
         museum_last_time_movements_written_sec=int(time.time())
 
@@ -317,23 +312,18 @@ def consumer(queue:Queue):
         except serial.serialutil.SerialException as e:
             log.error(f'Error writing to serial port {SERIAL_PORT} with cmd {cmd} for detected symbol {pred_name}: {e}')
                 
-    def create_museum_csv_writer() ->None:
-        nonlocal museum_csv_logging_file
-        nonlocal museum_csv_writer
-        # nonlocal museum_logging_lock
+    def create_museum_actions_logging_csv_file() ->str:
 
-        if museum_csv_logging_file:
-            museum_csv_logging_file.close()
         if MUSEUM_LOGGING_FILE is None:
             return
         if not os.path.exists(LOG_DIR):
             os.mkdir(LOG_DIR)
-        museum_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
-        museum_csv_logging_file=open(museum_logging_file_name,'w',newline='')
-        museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
-        museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'elapsed_minutes', 'actions'])
-        log.info(f'created logging file {museum_logging_file_name}')
-        return
+        museum_csv_actions_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
+        with open(museum_csv_actions_logging_file_name,'w',newline='') as museum_csv_logging_file:
+            museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
+            museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'elapsed_minutes', 'actions'])
+            log.info(f'created logging file {museum_csv_actions_logging_file_name}')
+        return museum_csv_actions_logging_file_name
 
     parser = argparse.ArgumentParser(
         description='consumer: Consumes DVS frames for trixy to process', allow_abbrev=True,
@@ -373,11 +363,11 @@ def consumer(queue:Queue):
                     os.mkdir(symbol_folder_name)
                     log.info(f'made folder {symbol_folder_name} to hold sample classified frames')
 
-    create_museum_csv_writer()
+    museum_csv_actions_logging_file_name=create_museum_actions_logging_csv_file()
     log.info(f"scheduling 'I am alive' logging every MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES={MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES).minutes.do(log_i_am_alive_message)
-    log.info(f'scheduling new actions CSV file every MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS={MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h')
-    schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_csv_writer)
+    # log.info(f'scheduling new actions CSV file every MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS={MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h')
+    # schedule.every(MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS).hours.do(create_museum_actions_logging_csv_file)
     log.info(f"scheduling hand action count every MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES={MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES).minutes.do(write_actions_to_csv)
     log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_DEMO_MOVEMENT_INTERVAL_M}m")
@@ -487,11 +477,7 @@ def consumer(queue:Queue):
             dt=time.time()-timestamp
             with Timer('producer->consumer inference delay',delay=dt, show_hist=False):
                 pass
-        
 
-    if museum_csv_logging_file:
-        museum_csv_logging_file.close()
-        log.info(f'closed CSV action logging file {museum_csv_logging_file.name}')
     log.info('Ending consumer')    
     
     # end of consumer()
