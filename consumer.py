@@ -263,29 +263,6 @@ def consumer(queue:Queue):
         except serial.serialutil.SerialException as e:
             log.error(f'Error writing to serial port {SERIAL_PORT}: {e}')
     
-    def write_actions_to_csv():
-        nonlocal museum_movements_since_last_log
-        nonlocal museum_last_time_movements_written_sec
-        nonlocal museum_csv_actions_logging_file_name
-        
-        if museum_csv_actions_logging_file_name is None:
-            return
-        now=datetime.now()
-        minutes_since_last=(int(time.time())-museum_last_time_movements_written_sec)/60
-        year=now.year
-        weekday=now.weekday()
-        day_of_year = now.timetuple().tm_yday # day of year
-        hour=now.hour # hour of day
-        minute=now.minute
-        
-        try:
-            with open(museum_csv_actions_logging_file_name,'a',newline='') as museum_csv_logging_file:
-                museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
-                museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
-        except Exception as e:
-            log.error(f'could not write action count to {museum_csv_actions_logging_file_name}: {e}')
-        museum_movements_since_last_log=0
-        museum_last_time_movements_written_sec=int(time.time())
 
 
     def maybe_show_demo_sequence():
@@ -324,6 +301,30 @@ def consumer(queue:Queue):
             museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'elapsed_minutes', 'actions'])
             log.info(f'created logging file {museum_csv_actions_logging_file_name}')
         return museum_csv_actions_logging_file_name
+
+    def write_actions_to_csv():
+        nonlocal museum_movements_since_last_log
+        nonlocal museum_last_time_movements_written_sec
+        nonlocal museum_csv_actions_logging_file_name
+        
+        if museum_csv_actions_logging_file_name is None:
+            return
+        now=datetime.now()
+        minutes_since_last=(int(time.time())-museum_last_time_movements_written_sec)/60
+        year=now.year
+        weekday=now.weekday()
+        day_of_year = now.timetuple().tm_yday # day of year
+        hour=now.hour # hour of day
+        minute=now.minute
+        
+        try:
+            with open(museum_csv_actions_logging_file_name,'a',newline='') as museum_csv_logging_file:
+                museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
+                museum_csv_writer.writerow([year,day_of_year,weekday,hour,minute,minutes_since_last ,museum_movements_since_last_log])
+        except Exception as e:
+            log.error(f'could not write action count to {museum_csv_actions_logging_file_name}: {e}')
+        museum_movements_since_last_log=0
+        museum_last_time_movements_written_sec=int(time.time())
 
     parser = argparse.ArgumentParser(
         description='consumer: Consumes DVS frames for trixy to process', allow_abbrev=True,
