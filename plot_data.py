@@ -57,7 +57,12 @@ def plot_data():
     fig.clear()
     x=frac_days
     y=norm_moves
+    idx=np.argsort(year_frac_days) # sort all the data based on absolute time
+    x=x[idx]
+    y=y[idx]
     plt.plot(x,y,'o')
+    # stair_edges=np.append(x,x[-1])
+    # plt.stairs(values=y,edges=stair_edges,orientation='vertical',fill=False, baseline=int_weeks)
     plt.xlabel('days of week')
     plt.ylabel('week of year')
     plt.xlim([0,7])
