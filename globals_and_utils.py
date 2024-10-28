@@ -57,7 +57,7 @@ TFLITE_FILE_NAME= DEXTRA_NET_BASE_NAME + '.tflite' # tflite model is stored in s
 SYMBOL_TO_PRED_DICT={'background':3, 'paper':0, 'scissors': 1, 'rock':2} # maps from symbol name to prediction number from CNN
 PRED_TO_SYMBOL_DICT={v: k for k, v in SYMBOL_TO_PRED_DICT.items()} # maps from prediction number to symbol name
 MIN_INTERVAL_S_BETWEEN_CMDS=3e-3 # use to limit serial port command rate
-USE_MAJORITY_VOTE= True # base hand movements on majority vote over past few predictions of human hand symbol to improve accuracy (but increase latency)
+PREDICTION_VOTING_METHOD= 'sequence' # 'majority', None #  base hand movements on majority vote over past few predictions of human hand symbol to improve accuracy (but increase latency)
 
 SHOW_STATISTICS_AT_END=False # set True to show timing histograms
 

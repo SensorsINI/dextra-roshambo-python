@@ -94,6 +94,35 @@ class majority_vote:
         return None
 
 
+class sequential_prediction_vote:
+    #filter cmd with majority vote
+    def __init__(self, num_in_row): # window_length is size of window in votes, num_classes is the number of possible values, 0 to num_classes-1
+        """ Does vote over past predictions of human hand symbol
+        :param num_in_row: the size of window in votes
+        :param num_classes: the number of possible values, 0 to num_classes-1
+        :return: the vote if there is one, else None
+        """
+        self.num_in_row = num_in_row
+        self.last_symbol=None
+        self.count_of_last_symbol=0
+        self.num_predictions=0
+
+    def new_prediction_and_vote(self, symbol): # cmd is the new value, in range 0 to num_classes-1
+        """ Takes new prediction of symbol, returns possible new vote
+        :param symbol: the new classification of hand symbol
+        :returns: the vote if there have been self.num_in_row the same, or None if not
+        """
+        self.num_predictions+=1
+        if self.last_symbol==symbol:
+            self.count_of_last_symbol+=1
+            if self.count_of_last_symbol>=self.num_in_row:
+                return symbol
+            else:
+                return None
+        else:
+            self.last_symbol=symbol
+            self.count_of_last_symbol=1
+            return None
 
 def classify_img(img: np.array, interpreter, input_details, output_details):
     """ Classify uint8 img
@@ -397,8 +426,12 @@ def consumer(queue:Queue):
     # prediction symbol ('background' 'rock','scissors', 'paper'), class number (0-3)
     # see Arduino firmware https://github.com/SensorsINI/Dextra-robot-hand-firmware for the commands and hand symbols shown
     pred_to_cmd_dict={0:b'2',1:b'3',2:b'1',3:None}
-    cmd_voter = majority_vote(window_length=5, num_classes=4)
-
+    if PREDICTION_VOTING_METHOD=='sequence':
+        cmd_voter = sequential_prediction_vote(num_in_row=3)
+    elif PREDICTION_VOTING_METHOD=='majority':
+        cmd_voter = majority_vote(window_length=5, num_classes=4)
+    else:
+        cmd_voter=None
 
     show_demo_sequence()
 
@@ -437,13 +470,13 @@ def consumer(queue:Queue):
 
             if pred_idx<=3: # symbol recognized (or background==3)
                 cmd=pred_to_cmd_dict[pred_idx] # start with no command sent to hand
-                if USE_MAJORITY_VOTE:
+                if cmd_voter:
                     vote = cmd_voter.new_prediction_and_vote(pred_idx)
-                    if vote is None:
-                        continue
-                    else:
-                        cmd = pred_to_cmd_dict[vote]
-                        pred_name=PRED_TO_SYMBOL_DICT[vote]
+                if vote is None:
+                    continue
+                else:
+                    cmd = pred_to_cmd_dict[vote]
+                    pred_name=PRED_TO_SYMBOL_DICT[vote]
                 if not save_frames_disabled and SAVE_FRAMES_INTERVAL>0 and save_frames_folder and pred_name!=last_prediction_name and frame_number-save_frames_last_frame_saved>=SAVE_FRAMES_INTERVAL:
                     fname=str(int(time.time()))+'.png'
                     path=os.path.join(save_frames_folder,pred_name,fname)
