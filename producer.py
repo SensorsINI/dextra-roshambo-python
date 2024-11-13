@@ -184,7 +184,13 @@ def producer(queue:Queue):
                     events = None
                     while (not dvs is None) and (events is None or ((not events is None) and len(events)<EVENT_COUNT_PER_FRAME)):
                         # pol_events, num_pol_event,_, _, _, _, _, _ = dvs.get_event()
-                        pol_events, num_pol_event, *_ = dvs.get_event() # ignore other return values since only brightness change events are used from DVS and DAVIS
+                        # dvs.get_event() might return None if camera is unplugged
+                        # pol_events, num_pol_event, *_ = dvs.get_event() # ignore other return values since only brightness change events are used from DVS and DAVIS
+                        ret = dvs.get_event() # ignore other return values since only brightness change events are used from DVS and DAVIS
+                        if not ret is None:
+                            pol_events, num_pol_event, *_ = ret
+                        else:
+                            num_pol_event=0
                         # assemble 'frame' of EVENT_COUNT events
                         if  num_pol_event>0:
                             last_events_recieved_time=time.time()
@@ -283,8 +289,4 @@ if __name__ == '__main__':
         help="only record when spacebar pressed down")
     args = parser.parse_args()
 
-    try:
-        producer(queue=None)
-    except Exception as e:
-        log.error(f'Error: {e}')
-        sys.exit()
+    producer(queue=None)
