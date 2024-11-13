@@ -33,6 +33,7 @@ UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / m
 # camera type is automatically detected in open_camera()
 CAMERA_TYPES=[DVS128,DAVIS]
 CAMERA_TO_BIASES_DICT={'DVS128':'./configs/dvs128_config.json', 'DAVIS': './configs/davis346_config.json'}
+CAMERA_UNPLUGGED_TIMEOUT_S=5 # how long with zero events to give up on camera and close/repopen (in case of unplugged or wakeup from sleep)
 
 EVENT_COUNT_CLIP_VALUE = 16  # full count value for colleting histograms of DVS events
 SHOW_DVS_OUTPUT = False # producer shows the accumulated DVS frames as aid for focus and alignment

@@ -63,8 +63,9 @@ def producer(queue:Queue):
                 log.info(f'opened camera {dvs}')
                 break
             except Exception as e:
-                log.warning(f'cannot open camera type {c}: {e}')
+                log.info(f'cannot open camera type {c}: {e}')
         if dvs is None:
+            log.warning(f"could not open any camera type in {CAMERA_TYPES}")
             return None
         
         EVENT_COUNT_PER_FRAME=None
@@ -157,10 +158,12 @@ def producer(queue:Queue):
     time_last_frame_sent=time.time()
     frames_dropped_counter=0
     save_next_frame=not spacebar_records # if we don't supply the option, it will be False and we want to then save all frames
+    last_events_recieved_time=time.time()
 
     def cleanup():
-        log.info('closing {}'.format(dvs))
-        dvs.shutdown()
+        if dvs:
+            log.info('closing {}'.format(dvs))
+            dvs.shutdown()
         cv2.destroyAllWindows()
 
     atexit.register(cleanup)
@@ -172,21 +175,33 @@ def producer(queue:Queue):
             if dvs is None:
                 dvs=open_camera()
                 if dvs is None:
-                    time.sleep(5)
+                    log.warning('no DVS camera found, sleeping to next try to open one')
+                    time.sleep(1)
                     continue
 
             with Timer('overall producer frame rate', numpy_file=numpy_file , show_hist=SHOW_STATISTICS_AT_END) as timer_overall:
                 with Timer('accumulate DVS'):
                     events = None
-                    while events is None or len(events)<EVENT_COUNT_PER_FRAME:
+                    while (not dvs is None) and (events is None or ((not events is None) and len(events)<EVENT_COUNT_PER_FRAME)):
                         # pol_events, num_pol_event,_, _, _, _, _, _ = dvs.get_event()
                         pol_events, num_pol_event, *_ = dvs.get_event() # ignore other return values since only brightness change events are used from DVS and DAVIS
                         # assemble 'frame' of EVENT_COUNT events
                         if  num_pol_event>0:
+                            last_events_recieved_time=time.time()
                             if events is None:
                                 events=pol_events
                             else:
                                 events = np.vstack([events, pol_events]) # otherwise tack new events to end
+                        else: # no events this call
+                            if time.time()-last_events_recieved_time>CAMERA_UNPLUGGED_TIMEOUT_S:
+                                log.error(f'time since last recieved any events is >{CAMERA_UNPLUGGED_TIMEOUT_S}s, will try to reopen camera')
+                                try:
+                                    dvs.shutdown()
+                                except:
+                                    pass
+                                dvs=None
+                if dvs is None:
+                    continue
                 # log.debug('got {} events (total so far {}/{} events)'
                 #          .format(num_pol_event, 0 if events is None else len(events), EVENT_COUNT))
                 dtMs = (time.time() - time_last_frame_sent)*1e3
