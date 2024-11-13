@@ -21,7 +21,11 @@ def plot_data():
             print(f'{f} is empty, skipping')
             continue   
         print(f'file {f}:')
-        rows = genfromtxt(f, delimiter=',', encoding="utf8", dtype=int, skip_header=1)
+        try:
+            rows = genfromtxt(f, delimiter=',', encoding="utf8", dtype=int, skip_header=1)
+        except Exception as e:
+            print(f'error reading {f}: {e}')
+            continue
         # print(row)
         if len(rows.shape)==2 and rows.shape[0]>1: # has more than 1 row of data (first row is header that is int-parsed as vector of -1 values)
             if rows.shape[1]==6: # old format, does not have minutes_since_last
