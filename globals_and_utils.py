@@ -72,6 +72,8 @@ MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES=10 # minutes between logging number of h
 MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS=1 # how many hours between creating new activity CSV file
 MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES=10 # how many minutes between logging "I'm alive" messages
 MUSEUM_SCAN_FOR_RESTART_FILE=True # periodically check if there is a file named "RESTART" and restart myself if found, deleting the file first.
+MUSEUM_SLEEP_TIME_LOCAL="18:30" # local time every day to sleep computer
+MUSEUM_WAKE_TIME_LOCAL="09:00" # time that computer wakes
 
 # saving frames
 SAVE_FRAMES_INTERVAL=10

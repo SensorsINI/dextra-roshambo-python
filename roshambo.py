@@ -11,6 +11,7 @@ from utils.get_logger import get_logger
 from utils.kbhit import KBHit
 from globals_and_utils import *
 from pathlib import Path
+import schedule
 
 log = get_logger(__name__)
 
@@ -33,6 +34,9 @@ def main():
     con, pro = start_processes(queue)
     if kbAvailable:
         print_help()
+    log.info(f'scheduling sleep every day at {MUSEUM_SLEEP_TIME_LOCAL} UTC and wake at {MUSEUM_WAKE_TIME_LOCAL}')
+    schedule.every().day.at(MUSEUM_SLEEP_TIME_LOCAL).do(sleep_till_tomorrow)
+
     while True:
         # log.debug('waiting for consumer and producer processes to join')
         if kbAvailable and kb.kbhit():
@@ -65,6 +69,7 @@ def main():
                     con,pro=start_processes(queue=queue)
             except Exception as e:
                 log.error(f'could not restart: {e}')
+        schedule.run_pending()
 
         time.sleep(5)
     log.debug('joining producer and consumer processes')
@@ -76,6 +81,11 @@ def stop_processes(consumer, producer):
     log.info("\nterminating producer and consumer....")
     consumer.terminate()
     producer.terminate()
+
+def sleep_till_tomorrow():
+    log.info(f'****** going to sleep with rtcwake until {MUSEUM_WAKE_TIME_LOCAL}')
+    time.sleep(5)
+    os.system(f'rtcwake -m mem --date {MUSEUM_WAKE_TIME_LOCAL}')
 
 def start_processes(queue):
     log.debug('starting Roshambo demo consumer process')
