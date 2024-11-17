@@ -143,7 +143,7 @@ def classify_img(img: np.array, interpreter, input_details, output_details):
 
 
 def load_latest_model_convert_to_tflite():
-
+    log.info('loading roshambo model and converting to tflite model')
     input_tensor=Input(shape=(IMSIZE, IMSIZE, 1))
     x = RoshamboNet(
         input_tensor,

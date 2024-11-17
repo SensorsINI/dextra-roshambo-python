@@ -4,13 +4,12 @@ import os
 def load_from_numpy(model, path):
     import glob
     import numpy as np
-
+    log.info(f'loading {model} from {path}')
     shifts_weights = np.load(os.path.join(path, "shift_per_layer_kernel.npy"))
     shifts_biases = np.load(os.path.join(path,"shift_per_layer_bias.npy"))
     shifts_outputs = np.load(os.path.join(path,"shift_per_layer_activation.npy"))
 
     layer_index = 0
-    total_fixed = 0
 
     for layer in model.layers:
         print(f'loading weights for layer {layer.name}')
@@ -48,5 +47,5 @@ def load_from_numpy(model, path):
                 raise ValueError(f'model biases size does not match npy biases for layer {layer.name}')
 
             layer_index = layer_index + 1
-    print("Loading quantized weights done, fixed kernels: {}".format(total_fixed))
+    print("Done loading weights")
     return model
