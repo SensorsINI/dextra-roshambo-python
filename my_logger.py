@@ -74,7 +74,7 @@ class MyCustomTimedRotatingFileHandler(TimedRotatingFileHandler):
         return full_name
 
 
-def my_logger(name):
+def my_logger(name, enable_file_handler=True):
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     log = logging.getLogger(name)
     log.setLevel(LOGGING_LEVEL)
@@ -84,7 +84,7 @@ def my_logger(name):
     console_handler.setFormatter(CustomFormatter())
     log.addHandler(console_handler)
     log.addFilter(DuplicateFilter())
-    if LOG_FILE:
+    if enable_file_handler and LOG_FILE:
         fn=LOG_FILE+'-'+platform.node()+'-'+name+".log"
         path=os.path.join(LOG_DIR,fn)
         log.info(f'adding TimedRotatingFileHandler for logging output to {path} rotated every {LOG_ROTATION_INTERVAL_HOURS}h')
@@ -94,30 +94,30 @@ def my_logger(name):
         fh = MyCustomTimedRotatingFileHandler(path,when="H",
                                                        interval=LOG_ROTATION_INTERVAL_HOURS,
                                                        backupCount=7)
-        fh = MyCustomTimedRotatingFileHandler(path,when="S",
-                                                       interval=5,
-                                                       backupCount=3)
+        # fh = MyCustomTimedRotatingFileHandler(path,when="S",
+        #                                                interval=2,
+        #                                                backupCount=3)
         fh.setFormatter(CustomFormatter())
         log.addHandler(fh)
     return log
 
 class my_process(Process):
-        def __init__(self):
-             Process.__init__(self)
 
-        def run(self):
-            log=my_logger(self.name)
-            log.info('first log')
-            for i in range(1000):
-                    log.info(f'2nd log, repeat')
-                    time.sleep(.1)
-            log.info('3rd message')
+    def run(self):
+        log=my_logger(self.name)
+        time.sleep(3)
+        log.info('first log')
+        time.sleep(1)
+        for i in range(1000):
+                log.info(f'2nd log, repeat')
+                time.sleep(.1)
+        log.info('3rd message')
 
 
 if __name__ == '__main__':
 
-    a = Process(target=my_process,name='a')
-    b = Process(target=my_process,name='b')
+    a = my_process(target=my_process,name='a')
+    b = my_process(target=my_process,name='b')
     a.start()
     b.start()
     log=my_logger('main')

@@ -81,9 +81,11 @@ def sleep_till_tomorrow():
     result=None
     try:
         result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
-        log.info(f'successful: result={result}')
+        log.info(f'rtcwake call successful: result={result}')
     except Exception as e:
         log.error(f'could not execute "{cmd}":\n {e}\n result={result}')
+    time.sleep(3)
+    log.info('woke from sleep')
 
 def start_processes(queue):
     log.debug('starting Roshambo demo consumer process')
