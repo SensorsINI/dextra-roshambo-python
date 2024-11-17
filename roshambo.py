@@ -2,8 +2,9 @@
 # author: Tobi Delbruck 2023
 
 import multiprocessing as mp
+import subprocess
 import time
-from multiprocessing import Process, Pipe, Queue, SimpleQueue
+from multiprocessing import Process, Pipe, Queue
 
 from producer import producer
 from consumer import consumer
@@ -36,6 +37,7 @@ def main():
         print_help()
     log.info(f'scheduling sleep every day at {MUSEUM_SLEEP_TIME_LOCAL} UTC and wake at {MUSEUM_WAKE_TIME_LOCAL}')
     schedule.every().day.at(MUSEUM_SLEEP_TIME_LOCAL).do(sleep_till_tomorrow)
+    # schedule.every(2).minutes.do(sleep_till_tomorrow) # debug
 
     while True:
         # log.debug('waiting for consumer and producer processes to join')
@@ -49,7 +51,7 @@ def main():
                 stop_processes(con, pro)
                 break
         if not con.is_alive() or not pro.is_alive():
-            log.warning('either or both producer or consumer process(es) ended, terminating pdavis_demo loop')
+            log.warning('either or both producer or consumer process(es) ended, terminating loop')
             if pro.is_alive():
                 log.debug('terminating producer')
                 pro.terminate()
@@ -57,21 +59,9 @@ def main():
                 log.debug('terminating consumer')
                 con.terminate()
             break
-        if MUSEUM_SCAN_FOR_RESTART_FILE:
-            restart_path=Path("RESTART")
-            try:
-                if restart_path.is_file():
-                    log.info('"RESTART" file found, restarting producer and consumer processes')
-                    restart_path.unlink()
-                    stop_processes(consumer=con,producer=pro)
-                    pro.join()
-                    con.join()
-                    con,pro=start_processes(queue=queue)
-            except Exception as e:
-                log.error(f'could not restart: {e}')
         schedule.run_pending()
-
         time.sleep(5)
+        # end of main dextra loop
     log.debug('joining producer and consumer processes')
     pro.join()
     con.join()
@@ -83,9 +73,17 @@ def stop_processes(consumer, producer):
     producer.terminate()
 
 def sleep_till_tomorrow():
-    log.info(f'****** going to sleep with rtcwake until {MUSEUM_WAKE_TIME_LOCAL}')
+    args=f'-m mem --date {MUSEUM_WAKE_TIME_LOCAL}'
+    # args=' -m mem -s 60' # debug
+    cmd=f'/usr/sbin/rtcwake {args}'
+    log.info(f'****** going to sleep in 5s with "{cmd}"')
     time.sleep(5)
-    os.system(f'rtcwake -m mem --date {MUSEUM_WAKE_TIME_LOCAL}')
+    result=None
+    try:
+        result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
+        log.info(f'successful: result={result}')
+    except Exception as e:
+        log.error(f'could not execute "{cmd}":\n {e}\n result={result}')
 
 def start_processes(queue):
     log.debug('starting Roshambo demo consumer process')

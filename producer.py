@@ -28,6 +28,12 @@ from pyaer import libcaer
 from my_logger import my_logger
 log=my_logger(__name__)
 
+# camera type is automatically detected in open_camera()
+CAMERA_TYPES=[DVS128,DAVIS]
+CAMERA_TO_BIASES_DICT={'DVS128':'./configs/dvs128_config.json', 'DAVIS': './configs/davis346_config.json'}
+CAMERA_UNPLUGGED_TIMEOUT_S=5 # how long with zero events to give up on camera and close/repopen (in case of unplugged or wakeup from sleep)
+
+
 
 
 def producer(queue:Queue):
@@ -170,6 +176,7 @@ def producer(queue:Queue):
 
     try:
         numpy_file = None # TODO uncomment to save data f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
+        log.info('starting main producer loop')
         while True:
 
             if dvs is None:

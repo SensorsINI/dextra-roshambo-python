@@ -13,27 +13,13 @@ import atexit
 from engineering_notation import EngNumber  as eng  # only from pip
 from matplotlib import pyplot as plt
 import numpy as np
-from pyaer.davis import DAVIS
-from pyaer.dvs128 import DVS128
+from datetime import datetime
 from my_logger import my_logger
-import platform # hostname for unique log file name
-
 log=my_logger(__name__)
-
-
-
-LOG_DIR='logging'
-
-LOG_FILE='dextra-logging-'+platform.node() # base name of rotating log file; see consumer.py
 
 PORT = 12000  # UDP port used to send frames from producer to consumer
 IMSIZE = 64  # input image size, must match model
 UDP_BUFFER_SIZE = int(math.pow(2, math.ceil(math.log(IMSIZE * IMSIZE + 1000) / math.log(2))))
-
-# camera type is automatically detected in open_camera()
-CAMERA_TYPES=[DVS128,DAVIS]
-CAMERA_TO_BIASES_DICT={'DVS128':'./configs/dvs128_config.json', 'DAVIS': './configs/davis346_config.json'}
-CAMERA_UNPLUGGED_TIMEOUT_S=5 # how long with zero events to give up on camera and close/repopen (in case of unplugged or wakeup from sleep)
 
 EVENT_COUNT_CLIP_VALUE = 16  # full count value for colleting histograms of DVS events
 SHOW_DVS_OUTPUT = False # producer shows the accumulated DVS frames as aid for focus and alignment
@@ -63,19 +49,18 @@ PREDICTION_VOTING_METHOD= 'sequence' # 'majority', None #  base hand movements o
 SHOW_STATISTICS_AT_END=False # set True to show timing histograms
 
 # museum settings
-from datetime import datetime
 MUSEUM_OPENING_TIME=datetime.strptime('11:50','%H:%M').time() # start when attracting movements are shown
 MUSEUM_CLOSING_TIME=datetime.strptime('17:15','%H:%M').time()
 MUSEUM_DEMO_MOVEMENT_INTERVAL_M=3  # minutes between showing attracting movements of RSP movement if no cmd has been sent
 MUSEUM_LOGGING_FILE="actions-log" # # logging data to track activity, this is basename, actual name is e.g. file-YYYYMMDD-hhmm.csv
 MUSEUM_ACTIONS_LOGGING_INTERVAL_MINUTES=10 # minutes between logging number of hand actions
-MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS=1 # how many hours between creating new activity CSV file
+MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS=24 # how many hours between creating new activity CSV file
 MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES=10 # how many minutes between logging "I'm alive" messages
 MUSEUM_SCAN_FOR_RESTART_FILE=True # periodically check if there is a file named "RESTART" and restart myself if found, deleting the file first.
 MUSEUM_SLEEP_TIME_LOCAL="18:30" # local time every day to sleep computer
-MUSEUM_WAKE_TIME_LOCAL="09:00" # time that computer wakes
+MUSEUM_WAKE_TIME_LOCAL="08:45" # time that computer wakes
 
-# saving frames
+# saving frames 
 SAVE_FRAMES_INTERVAL=10
 SAVE_FRAMES_STORAGE_LOCATION='frames' # saved in logging folder too, in this subfolder
 SAVE_FRAMES_DISK_FREE_STOP_LIMIT_GB=100

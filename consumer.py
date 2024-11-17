@@ -39,7 +39,7 @@ import schedule
 from tensorflow.python.keras.models import load_model, Model
 # from Quantizer import apply_quantization
 import logging
-from my_logger import my_logger, CustomFormatter
+from my_logger import LOG_DIR, my_logger, CustomFormatter
 log=my_logger(__name__)
 from numpy_loader import load_from_numpy
 
@@ -235,14 +235,6 @@ def consumer(queue:Queue):
             museum_last_i_am_alive_log_time_sec=now
             log.info(f'Consumer is alive at {datetime.now()}')
 
-    if LOG_FILE:
-        path=os.path.join(LOG_DIR,LOG_FILE)
-        log.info(f'adding TimedRotatingFileHandler for logging consumer output to {path} rotated every {MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS}h with backup count 100 files')
-        fh = logging.handlers.TimedRotatingFileHandler(path,when="H",
-                                                       interval=MUSEUM_ACTIONS_CSV_LOG_FILE_CREATION_INTERVAL_HOURS,
-                                                       backupCount=100) 
-        fh.setFormatter(CustomFormatter())
-        log.addHandler(fh)
 
     def show_frame(frame, name, resized_dict)->int:
         """ Show the frame in named cv2 window and handle resizing
@@ -403,10 +395,6 @@ def consumer(queue:Queue):
     log.info(f"scheduling attracting demo movement every MUSEUM_HAND_MOVEMENT_INTERVAL_M={MUSEUM_DEMO_MOVEMENT_INTERVAL_M}m")
     schedule.every(MUSEUM_DEMO_MOVEMENT_INTERVAL_M).minutes.do(maybe_show_demo_sequence)
     
-    # logging.basicConfig()
-    # schedule_logger = logging.getLogger('schedule')
-    # schedule_logger.setLevel(level=logging.INFO)
-
     serial_port_name = args.serial_port
     serial_port_instance = open_serial_port(serial_port_name)
 
@@ -435,7 +423,7 @@ def consumer(queue:Queue):
 
     show_demo_sequence()
 
-    log.info('in display, hit x to exit or spacebar to show demo movement')
+    log.info('starting main consumer loop; in display, hit x to exit or spacebar to show demo movement')
     while True:
         # timestr = time.strftime("%Y%m%d-%H%M")
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
