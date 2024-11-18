@@ -39,19 +39,40 @@ def plot_data():
     days=data[:,1]
     hours=data[:,3]
     minutes=data[:,4]
+    moves=data[:,5]
+
+    datetimes=[] # absolute datetimes from column data
+    for i in range(len(years)):
+        str_datetime=f'{years[i]:04d}-{days[i]:03d} {hours[i]:02d}:{minutes[i]:02d}'
+        datetimes.append(datetime.datetime.strptime(str_datetime,'%Y-%j %H:%M'))
+    
+    # sort all the data in ascending time
+    sort_idx=np.argsort(datetimes)
+    datetimes=[datetimes[i] for i in sort_idx]
+    
+    moves=np.array([moves[i] for i in sort_idx])
+    years=np.array([years[i] for i in sort_idx])
+    days=np.array([days[i] for i in sort_idx])
+    hours=np.array([hours[i] for i in sort_idx])
+    minutes=np.array([minutes[i] for i in sort_idx])
+    
+    # get absolute times in hours since epoch 1970
+    datetimes_hours=np.zeros(len(datetimes))
+    for i in range(len(datetimes_hours)):
+        datetimes_hours[i]=datetimes[i].timestamp()/(60*60)
+    delta_times_hours=np.diff(datetimes_hours,prepend=datetimes_hours[0])
+
+    moves_per_hour=moves/delta_times_hours
+    
     year_frac_days=(days+hours/24.0+minutes/(24.*60)) # fraction of year in days
     frac_days=year_frac_days%7 # fraction of week
     int_weeks=np.floor(year_frac_days/7) # floored year weeks
     start_week=np.min(int_weeks)
-    moves=data[:,5]
     moves_nonzero=moves.astype(np.float32)
     moves_nonzero[moves_nonzero==0]=np.nan
     max_moves=np.max(moves)
     norm_moves=(moves_nonzero/max_moves)+int_weeks # shift weeks vertically
-    datetimes=[]
-    for i in range(len(years)):
-        datetimes.append(datetime.datetime(years[i], 1, 1) + datetime.timedelta(float(days[i]) - 1))
-    datetimes.sort()
+    
     # start/end date
     date_start= datetimes[0]
     date_end  = datetimes[-1]
@@ -61,9 +82,6 @@ def plot_data():
     fig.clear()
     x=frac_days
     y=norm_moves
-    idx=np.argsort(year_frac_days) # sort all the data based on absolute time
-    x=x[idx]
-    y=y[idx]
     plt.plot(x,y,'o',ms=3)
     # stair_edges=np.append(x,x[-1])
     # plt.stairs(values=y,edges=stair_edges,orientation='vertical',fill=False, baseline=int_weeks)
