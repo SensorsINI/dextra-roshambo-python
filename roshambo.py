@@ -14,7 +14,7 @@ from globals_and_utils import *
 from pathlib import Path
 import schedule
 
-log=my_logger(__name__)
+log=my_logger('roshambo')
 
 def main():
     kb=None
