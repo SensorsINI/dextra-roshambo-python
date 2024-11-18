@@ -1,10 +1,9 @@
 import os
 
-
 def load_from_numpy(model, path):
     import glob
     import numpy as np
-    log.info(f'loading {model} from {path}')
+    print(f'loading {model} from {path}')
     shifts_weights = np.load(os.path.join(path, "shift_per_layer_kernel.npy"))
     shifts_biases = np.load(os.path.join(path,"shift_per_layer_bias.npy"))
     shifts_outputs = np.load(os.path.join(path,"shift_per_layer_activation.npy"))
