@@ -14,7 +14,7 @@ from globals_and_utils import *
 from pathlib import Path
 import schedule
 
-log = get_logger(__name__)
+log=my_logger(__name__)
 
 def main():
     kb=None
@@ -51,7 +51,7 @@ def main():
                 stop_processes(con, pro)
                 break
         if not con.is_alive() or not pro.is_alive():
-            log.warning('either or both producer or consumer process(es) ended, terminating loop')
+            log.info('either or both producer or consumer process(es) ended, terminating loop')
             if pro.is_alive():
                 log.debug('terminating producer')
                 pro.terminate()
