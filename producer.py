@@ -176,7 +176,7 @@ def producer(queue:Queue):
 
     try:
         numpy_file = None # TODO uncomment to save data f'{DATA_FOLDER}/producer-frame-rate-{timestr}.npy'
-        log.info('starting main producer loop')
+        log.info('*********** starting main producer loop')
         while True:
 
             if dvs is None:
