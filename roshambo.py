@@ -16,6 +16,8 @@ import schedule
 
 log=my_logger('roshambo')
 
+TEST_SLEEP=False # debug/test sleep/wake with 2 minute intervals
+
 def main():
     kb=None
     try:
@@ -35,9 +37,11 @@ def main():
     con, pro = start_processes(queue)
     if kbAvailable:
         print_help()
-    log.info(f'scheduling sleep every day at {MUSEUM_SLEEP_TIME_LOCAL} UTC and wake at {MUSEUM_WAKE_TIME_LOCAL}')
-    schedule.every().day.at(MUSEUM_SLEEP_TIME_LOCAL).do(sleep_till_tomorrow)
-    # schedule.every(2).minutes.do(sleep_till_tomorrow) # debug
+    log.info(f'scheduling sleep every day at {MUSEUM_SLEEP_TIME_LOCAL} UTC and wake at {MUSEUM_WAKE_TIME_UTC}')
+    if TEST_SLEEP:
+        schedule.every(2).minutes.do(sleep_till_tomorrow) # debug
+    else:
+        schedule.every().day.at(MUSEUM_SLEEP_TIME_LOCAL).do(sleep_till_tomorrow)
 
     while True:
         # log.debug('waiting for consumer and producer processes to join')
@@ -72,9 +76,13 @@ def stop_processes(consumer, producer):
     consumer.terminate()
     producer.terminate()
 
+
 def sleep_till_tomorrow():
-    args=f'-m mem --date {MUSEUM_WAKE_TIME_LOCAL}'
-    # args=' -m mem -s 60' # debug
+    if TEST_SLEEP:
+        log.info('testing sleep  with 1 minute sleep')
+        args=f' -u -m mem -t $(date -d "+ 1 minute" +%s)'
+    else:
+        args=f' -u -m mem -t $(date -d "tomorrow {MUSEUM_WAKE_TIME_UTC}" +%s)' # -u assume hardware clock set to UTC, -m mem suspend to RAM, -d 
     cmd=f'/usr/sbin/rtcwake {args}'
     log.info(f'****** going to sleep in 5s with "{cmd}"')
     time.sleep(5)
@@ -83,9 +91,9 @@ def sleep_till_tomorrow():
         result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
         log.info(f'rtcwake call successful: result={result}')
     except Exception as e:
-        log.error(f'could not execute "{cmd}":\n {e}\n result={result}')
+        log.error(f'could not execute "{cmd}":\n {e}\n result={result}\n')
     time.sleep(3)
-    log.info('woke from sleep')
+    log.info('****** woke from sleep')
 
 def start_processes(queue):
     log.debug('starting Roshambo demo consumer process')
