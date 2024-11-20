@@ -185,6 +185,7 @@ def producer(queue:Queue):
                     log.warning('no DVS camera found, sleeping to next try to open one')
                     time.sleep(1)
                     continue
+                log.info(f'camera {dvs} successfully opened')
 
             with Timer('overall producer frame rate', numpy_file=numpy_file , show_hist=SHOW_STATISTICS_AT_END) as timer_overall:
                 with Timer('accumulate DVS'):
