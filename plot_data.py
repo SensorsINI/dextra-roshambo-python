@@ -82,9 +82,9 @@ def plot_data():
     fig.clear()
     x=frac_days
     y=norm_moves
-    plt.plot(x,y,'o',ms=3)
-    # stair_edges=np.append(x,x[-1])
-    # plt.stairs(values=y,edges=stair_edges,orientation='vertical',fill=False, baseline=int_weeks)
+    # plt.plot(x,y,'o',ms=3)
+    stair_edges=np.append(x,x[-1])
+    plt.stairs(values=y,edges=stair_edges,orientation='vertical',fill=False, baseline=int_weeks)
     plt.xlabel('days of week')
     plt.ylabel('week of year')
     plt.xlim([0,7])
