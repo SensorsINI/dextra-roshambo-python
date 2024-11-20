@@ -59,7 +59,8 @@ MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES=10 # how many minutes between logging "I'
 MUSEUM_SCAN_FOR_RESTART_FILE=True # periodically check if there is a file named "RESTART" and restart myself if found, deleting the file first.
 MUSEUM_SLEEP_TIME_LOCAL="18:30" # local time every day to sleep computer, used by schedule to run the sleep command
 MUSEUM_WAKE_TIME_UTC="07:45" # time that computer wakes in UTC time (time of computer RTC clock, checked in bios or by timedatectl)
-MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S=60 # time to dim screen if no actions for this many seconds
+MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S=20 # time to dim screen if no actions for this many seconds
+MUSEUM_DIMMED_SCREEN_BRIGHTNESS=.05 # how much to dim to, 0-1 range
 
 # saving frames 
 SAVE_FRAMES_INTERVAL=10

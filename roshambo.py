@@ -87,11 +87,11 @@ def sleep_till_tomorrow():
     log.info(f'****** going to sleep in 5s with "{cmd}"')
     time.sleep(5)
     result=None
-    try:
-        result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
+    result=subprocess.run(cmd,check=False, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
+    if result.returncode==0:
         log.info(f'rtcwake call successful: result={result}')
-    except Exception as e:
-        log.error(f'could not execute "{cmd}":\n {e}\n result={result}\n')
+    else:
+        log.error(f'could not execute "{cmd}":\n result={result}\n')
     time.sleep(3)
     log.info('****** woke from sleep')
 

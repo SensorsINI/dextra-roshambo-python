@@ -206,6 +206,56 @@ def load_tflite_model(folder=None):
 
     return interpreter, input_details, output_details
 
+# https://askubuntu.com/questions/604720/setting-to-high-performance
+def set_processor_performance_mode(mode:str):
+    return # don't do anything for now
+    if mode is None or not mode in ('powersave','performance'):
+        log.error(f'mode "{mode}" must be either "powersave" or "performance"')
+        return
+    cmd=f'echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor {mode}'
+    log.info(f'****** setting power mode with "{cmd}"')
+    result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
+    if result.returncode==0:
+        log.info(f'power setting successful: result={result}')
+    else:
+        log.error(f'could not execute "{cmd}":\n result={result}\n')
+
+class brightness_controller:
+
+    museum_screen_dimmed=True # set True when screen dimmed, set True initially so initial brighten_screen  does something
+    
+    # https://askubuntu.com/questions/149054/how-to-change-lcd-brightness-from-command-line-or-via-script
+    def set_screen_brightness(self, brightness:float):
+        if brightness is None or brightness is str or brightness<0 or brightness>1:
+            raise Exception(f'brightness {brightness} must be between 0 and 1')
+            
+
+        MAX_BRIGHTNESS=19200
+        FILE='/sys/class/backlight/intel_backlight/brightness' # must be set to chmod a+w
+
+        b=int(brightness*MAX_BRIGHTNESS)
+        cmd=f'echo {b} > {FILE}'
+        log.debug(f'****** setting brightness with "{cmd}"')
+        result=subprocess.run(cmd,check=False, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
+        if result.returncode==0:
+            log.debug(f'brightness setting successful: result={result}')
+        else:
+            log.error(f'could not execute "{cmd}":\n result={result}\n')
+
+    def dim_screen(self):
+        if not self.museum_screen_dimmed:
+            log.debug('dimming screen')
+            self.set_screen_brightness(MUSEUM_DIMMED_SCREEN_BRIGHTNESS)
+            set_processor_performance_mode('powerwsave')
+            self.museum_screen_dimmed=True
+        
+
+    def brighten_screen(self):
+        if self.museum_screen_dimmed:
+            log.debug('brightening screen')
+            self.set_screen_brightness(1)
+            set_processor_performance_mode('performance')
+            self.museum_screen_dimmed=False
 
 
 def consumer(queue:Queue):
@@ -224,7 +274,9 @@ def consumer(queue:Queue):
     museum_movements_since_last_log=0
     museum_last_time_movements_written_sec=0
     museum_last_i_am_alive_log_time_sec=0
-    museum_screen_dimmed=True # set True when screen dimmed, set True initially so initial brighten_screen  does something
+
+    brightness=brightness_controller()
+    brightness.brighten_screen()
 
     save_frames_folder=None
     save_frames_last_frame_saved=0
@@ -264,7 +316,7 @@ def consumer(queue:Queue):
             return None
         return value
     
-    def send_cmd(cmd):
+    def send_cmd(cmd, update_time_sent=True):
         nonlocal time_last_sent_cmd
         nonlocal last_cmd_sent
         nonlocal serial_port_instance
@@ -275,7 +327,8 @@ def consumer(queue:Queue):
             museum_movements_since_last_log+=1
             last_cmd_sent=cmd
 
-        time_last_sent_cmd=time.time()
+        if update_time_sent:
+            time_last_sent_cmd=time.time()
         if serial_port_instance is None:
             log.error(f'cannot send command; null serial port')
             return
@@ -306,7 +359,7 @@ def consumer(queue:Queue):
         log.debug('showing demo sequence')
         try:
             for c in cmds:
-                send_cmd(c)
+                send_cmd(c,update_time_sent=False) # dont update time so we don't light up backlight for these movements
                 time.sleep(interval_seconds)
 
         except serial.serialutil.SerialException as e:
@@ -349,39 +402,6 @@ def consumer(queue:Queue):
         museum_movements_since_last_log=0
         museum_last_time_movements_written_sec=int(time.time())
 
-    # https://askubuntu.com/questions/149054/how-to-change-lcd-brightness-from-command-line-or-via-script
-    def set_screen_brightness(brightness:float):
-        if brightness is None or brightness is str or brightness<0 or brightness>1:
-            raise Exception(f'brightness {brightness} must be between 0 and 1')
-            
-
-        MAX_BRIGHTNESS=19200
-        FILE='/sys/class/backlight/intel_backlight/brightness' # must be set to chmod a+w
-
-        b=int(brightness*MAX_BRIGHTNESS)
-        cmd=f'echo {b} > {FILE}'
-        log.info(f'****** setting brightness with "{cmd}"')
-        result=None
-        try:
-            result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
-            log.info(f'brightness setting successful: result={result}')
-        except Exception as e:
-            log.error(f'could not execute "{cmd}":\n {e}\n result={result}\n')
-
-    def dim_screen():
-        nonlocal museum_screen_dimmed
-        if not museum_screen_dimmed:
-            log.debug('dimming screen')
-            set_screen_brightness(.3)
-            museum_screen_dimmed=True
-        
-
-    def brighten_screen():
-        nonlocal museum_screen_dimmed
-        if museum_screen_dimmed:
-            log.debug('brightening screen')
-            set_screen_brightness(1)
-            museum_screen_dimmed=False
 
     parser = argparse.ArgumentParser(
         description='consumer: Consumes DVS frames for trixy to process', allow_abbrev=True,
@@ -458,7 +478,6 @@ def consumer(queue:Queue):
         cmd_voter=None
 
     show_demo_sequence()
-    brighten_screen()
 
     log.info('starting main consumer loop; in display, hit x to exit or spacebar to show demo movement')
     while True:
@@ -466,6 +485,13 @@ def consumer(queue:Queue):
         # with Timer('overall consumer loop', numpy_file=f'{DATA_FOLDER}/consumer-frame-rate-{timestr}.npy', show_hist=True):
         schedule.run_pending() # new log file, I am alive, demo_sequence
         
+        # maybe dim or brighten screen
+        if dt:=time.time()-time_last_sent_cmd > MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S:
+            # log.debug(f'time since last cmd is {dt:.1f}s>{MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S}s, dimming screen')
+            brightness.dim_screen()
+        else:
+            brightness.brighten_screen()
+
         with Timer('overall consumer loop', numpy_file=None, show_hist=False):
             
 
@@ -531,12 +557,6 @@ def consumer(queue:Queue):
             elif k==ord(' '):
                 show_demo_sequence()
 
-            # maybe dim or brighten screen
-            if dt:=time.time()-time_last_sent_cmd > MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S:
-                log.debug(f'time since last cmd is {dt:.1f}s>{MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S}s, dimming screen')
-                dim_screen()
-            else:
-                brighten_screen()
 
             # save time since frame sent from producer
             dt=time.time()-timestamp
@@ -558,19 +578,6 @@ def open_serial_port(serial_port_name):
     return serial_port_instance
 
 
-# https://askubuntu.com/questions/604720/setting-to-high-performance
-def set_processor_performance_mode(mode:str):
-    if mode is None or not mode in ('powersave','performance'):
-        log.error(f'mode "{mode}" must be either "powersave" or "performance"')
-        return
-    cmd=f'echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor {mode}'
-    log.info(f'****** setting power mode with "{cmd}"')
-    result=None
-    try:
-        result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
-        log.info(f'power setting successful: result={result}')
-    except Exception as e:
-        log.error(f'could not execute "{cmd}":\n {e}\n result={result}\n')
 
 
 if __name__ == '__main__':
