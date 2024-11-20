@@ -230,11 +230,15 @@ class brightness_controller:
             raise Exception(f'brightness {brightness} must be between 0 and 1')
             
 
-        MAX_BRIGHTNESS=19200
-        FILE='/sys/class/backlight/intel_backlight/brightness' # must be set to chmod a+w
+        # MAX_BRIGHTNESS=19200
+        # FILE='/sys/class/backlight/intel_backlight/brightness' # must be set to chmod a+w
 
-        b=int(brightness*MAX_BRIGHTNESS)
-        cmd=f'echo {b} > {FILE}'
+        # b=int(brightness*MAX_BRIGHTNESS)
+
+        # cmd=f'echo {b} > {FILE}'
+        b=int(brightness*100)
+        # https://stackoverflow.com/questions/47026351/change-backlight-brightness-in-linux-with-python
+        cmd=f'gdbus call --session --dest org.gnome.SettingsDaemon.Power --object-path /org/gnome/SettingsDaemon/Power --method org.freedesktop.DBus.Properties.Set org.gnome.SettingsDaemon.Power.Screen Brightness "<int32 {b}>"'
         log.debug(f'****** setting brightness with "{cmd}"')
         result=subprocess.run(cmd,check=False, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
         if result.returncode==0:
