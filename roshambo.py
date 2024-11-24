@@ -37,7 +37,7 @@ def main():
     con, pro = start_processes(queue)
     if kbAvailable:
         print_help()
-    log.info(f'scheduling sleep every day at {MUSEUM_SLEEP_TIME_LOCAL} UTC and wake at {MUSEUM_WAKE_TIME_UTC}')
+    log.info(f'scheduling sleep every day at {MUSEUM_SLEEP_TIME_LOCAL} UTC and wake at {MUSEUM_WAKE_TIME_LOCAL}')
     if TEST_SLEEP:
         schedule.every(2).minutes.do(sleep_till_tomorrow) # debug
     else:
@@ -82,7 +82,7 @@ def sleep_till_tomorrow():
         log.info('testing sleep  with 1 minute sleep')
         args=f' -u -m mem -t $(date -d "+ 1 minute" +%s)'
     else:
-        args=f' -u -m mem -t $(date -d "tomorrow {MUSEUM_WAKE_TIME_UTC}" +%s)' # -u assume hardware clock set to UTC, -m mem suspend to RAM, -d 
+        args=f' -u -m mem -t $(date -d "tomorrow {MUSEUM_WAKE_TIME_LOCAL}" +%s)' # -u assume hardware clock set to UTC, -m mem suspend to RAM, -d 
     cmd=f'/usr/sbin/rtcwake {args}'
     log.info(f'****** going to sleep in 5s with "{cmd}"')
     time.sleep(5)

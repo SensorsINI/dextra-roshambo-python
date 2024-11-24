@@ -267,7 +267,7 @@ def consumer(queue:Queue):
     consume frames to predict polarization
     :param queue: if started with a queue, uses that for input of voxel volume
     """
-    time_last_sent_cmd=time.time()
+    time_last_sent_new_cmd=time.time()
     last_cmd_sent=None # to track changes of cmd for logging
     last_prediction_name=None # to track changes prediction of human hand symbol name
     serial_port_instance=None
@@ -321,7 +321,11 @@ def consumer(queue:Queue):
         return value
     
     def send_cmd(cmd, update_time_sent=True):
-        nonlocal time_last_sent_cmd
+        '''
+        @param cmd: cmd sent, a single character 1,2,3
+        @param update_time_sent: True to update the time, for screen dimming
+        '''
+        nonlocal time_last_sent_new_cmd
         nonlocal last_cmd_sent
         nonlocal serial_port_instance
         nonlocal museum_movements_since_last_log
@@ -331,8 +335,8 @@ def consumer(queue:Queue):
             museum_movements_since_last_log+=1
             last_cmd_sent=cmd
 
-        if update_time_sent:
-            time_last_sent_cmd=time.time()
+        if update_time_sent and cmd!=last_cmd_sent:
+            time_last_sent_new_cmd=time.time()
         if serial_port_instance is None:
             log.error(f'cannot send command; null serial port')
             return
@@ -490,7 +494,7 @@ def consumer(queue:Queue):
         schedule.run_pending() # new log file, I am alive, demo_sequence
         
         # maybe dim or brighten screen
-        if dt:=time.time()-time_last_sent_cmd > MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S:
+        if dt:=time.time()-time_last_sent_new_cmd > MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S:
             # log.debug(f'time since last cmd is {dt:.1f}s>{MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S}s, dimming screen')
             brightness.dim_screen()
         else:
@@ -546,19 +550,25 @@ def consumer(queue:Queue):
                             save_frames_disabled=True
 
                 # now send a command if there is one and we have not sent too recently
-                if cmd and time.time()-time_last_sent_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
+                if cmd and time.time()-time_last_sent_new_cmd>MIN_INTERVAL_S_BETWEEN_CMDS:
                     log.debug(f'sending cmd {cmd} for pred_idx {pred_idx} and detected symbol {pred_name}')
                     send_cmd(cmd)
 
-
+            if HOT_COLOR_DISPLAY:
+                img_hot=cv2.applyColorMap(img,cv2.COLORMAP_HOT)
+                img=img_hot
+                # img=np.abs((img.astype('float') / 255))
+                # img[:,:,1:2]=0
+            else:
+                img=1 - img.astype('float') / 255
             cv2.putText(img, pred_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
-            k=show_frame( 1 - img.astype('float') / 255,'RoshamboCNN',resized_dict)
+            k=show_frame( img,'RoshamboCNN',resized_dict)
             if k==ord('x') or k==27: # 'x' or ESC quits
                 log.info('Exiting main loop in response to x key')
                 break
             elif k == ord('p'):
                 print_timing_info()
-            elif k==ord(' '):
+            elif k==ord(' ') or k==13: # space or enter makes demo movement
                 show_demo_sequence()
 
 
