@@ -52,7 +52,9 @@ class DuplicateFilter(logging.Filter):
         # repeated messages are based on module, level and msg (not counting the timestamp of the log record)
         if current_log != self.last_log:
             if self.repeat_count>0:
-                record.msg=f'(suppressed {self.repeat_count} repeated messages) '+record.msg
+                last_msg=self.last_log[2]
+                last_msg_truncated=last_msg[:20] if len(last_msg)>20 else last_msg
+                record.msg=f'(suppressed {self.repeat_count} repeated messages starting "{last_msg_truncated}")\n'+record.msg
             self.last_log = current_log
             self.repeat_count=0
             return True
