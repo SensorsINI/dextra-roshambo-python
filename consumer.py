@@ -9,6 +9,7 @@ import glob
 import io
 import logging.handlers
 import pickle
+import platform
 import shutil
 import subprocess
 from typing import Tuple
@@ -248,18 +249,18 @@ class brightness_controller:
 
     def dim_screen(self):
         if not self.museum_screen_dimmed:
-            log.debug('dimming screen')
+            log.info('dimming screen')
+            self.museum_screen_dimmed=True
             self.set_screen_brightness(MUSEUM_DIMMED_SCREEN_BRIGHTNESS)
             set_processor_performance_mode('powerwsave')
-            self.museum_screen_dimmed=True
         
 
     def brighten_screen(self):
         if self.museum_screen_dimmed:
             log.debug('brightening screen')
+            self.museum_screen_dimmed=False
             self.set_screen_brightness(1)
             set_processor_performance_mode('performance')
-            self.museum_screen_dimmed=False
 
 
 def consumer(queue:Queue):
@@ -333,10 +334,11 @@ def consumer(queue:Queue):
         nonlocal frame_number
         if cmd!=last_cmd_sent:
             museum_movements_since_last_log+=1
-            last_cmd_sent=cmd
+            if update_time_sent:
+                time_last_sent_new_cmd=time.time()
 
-        if update_time_sent and cmd!=last_cmd_sent:
-            time_last_sent_new_cmd=time.time()
+        last_cmd_sent=cmd
+        
         if serial_port_instance is None:
             log.error(f'cannot send command; null serial port')
             return
@@ -379,7 +381,7 @@ def consumer(queue:Queue):
             return
         if not os.path.exists(LOG_DIR):
             os.mkdir(LOG_DIR)
-        museum_csv_actions_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
+        museum_csv_actions_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+'-'+platform.node()+'-'+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
         with open(museum_csv_actions_logging_file_name,'w',newline='') as museum_csv_logging_file:
             museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
             museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'elapsed_minutes', 'actions'])
