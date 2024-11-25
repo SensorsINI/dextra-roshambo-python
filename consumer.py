@@ -207,19 +207,20 @@ def load_tflite_model(folder=None):
 
     return interpreter, input_details, output_details
 
-# https://askubuntu.com/questions/604720/setting-to-high-performance
+#https://askubuntu.com/questions/1340608/ubuntu-21-04-power-mode
 def set_processor_performance_mode(mode:str):
-    return # don't do anything for now
-    if mode is None or not mode in ('powersave','performance'):
-        log.error(f'mode "{mode}" must be either "powersave" or "performance"')
+    modes=('power-saver','balanced','performance')
+    if mode is None or not mode in modes:
+        log.error(f'mode "{mode}" must be in {modes}')
         return
-    cmd=f'echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor {mode}'
-    log.info(f'****** setting power mode with "{cmd}"')
+    # gdbus call --system --dest net.hadess.PowerProfiles --object-path /net/hadess/PowerProfiles --method org.freedesktop.DBus.Properties.Set 'net.hadess.PowerProfiles' 'ActiveProfile' "<'performance'>"
+    cmd=f"gdbus call --system --dest net.hadess.PowerProfiles --object-path /net/hadess/PowerProfiles --method org.freedesktop.DBus.Properties.Set 'net.hadess.PowerProfiles' 'ActiveProfile' \"<'{mode}'>\""
+    log.debug(f'****** setting power mode with "{cmd}"')
     result=subprocess.run(cmd,check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,text=True)
     if result.returncode==0:
-        log.info(f'power setting successful: result={result}')
+        log.debug(f'performance {mode} setting successful: result={result}')
     else:
-        log.error(f'could not execute "{cmd}":\n result={result}\n')
+        log.error(f'performance {mode} command "{cmd}":\n result={result}\n')
 
 class brightness_controller:
 
@@ -252,7 +253,7 @@ class brightness_controller:
             log.info('dimming screen')
             self.museum_screen_dimmed=True
             self.set_screen_brightness(MUSEUM_DIMMED_SCREEN_BRIGHTNESS)
-            set_processor_performance_mode('powerwsave')
+            set_processor_performance_mode('power-saver')
         
 
     def brighten_screen(self):
@@ -304,17 +305,34 @@ def consumer(queue:Queue):
 
         :returns: key code, check it with key==ord('x) for example
         """
-        cv2.namedWindow(name, cv2.WINDOW_NORMAL)
-        if FULLSCREEN:
-            cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        
+        with Timer('show_frame', show_hist=True):
+            cv2.namedWindow(name, cv2.WINDOW_NORMAL|cv2.WINDOW_KEEPRATIO)
+            if FULLSCREEN:
+                cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-        cv2.imshow(name, frame)
-        if not FULLSCREEN and not (name in resized_dict):
-            cv2.resizeWindow(name, 600, 600)
-            resized_dict[name] = True
-        key = cv2.waitKey(1) & 0xFF # 1ms poll
-        return key
+                w=int(IMSIZE*FULLSCREEN_ASPECT_RATIO)
+                color=(0,0,0)
+                x_cen=(w-IMSIZE)//2
+                if len(frame.shape)==3: # RGB frame to show
+                    new_fr=np.full((IMSIZE,w,3),color, dtype=np.uint8)
+                else: # mono
+                    new_fr=np.full((IMSIZE,w),0, dtype=np.uint8)
+
+                new_fr[:,x_cen:x_cen+IMSIZE]=frame
+                frame=new_fr
+            # if FULLSCREEN:
+            #     cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+                # https://stackoverflow.com/questions/43391205/add-padding-to-images-to-get-them-into-the-same-shape
+                # https://docs.opencv.org/4.5.3/d3/df2/tutorial_py_basic_ops.html#:%7E:text=making%20borders%20for%20images%20(padding)
+                # frame=cv2.copyMakeBorder(frame,0,0,24,24,cv2.BORDER_CONSTANT,0)  # very slow
+            
+
+            cv2.imshow(name, frame)
+            if not FULLSCREEN and not (name in resized_dict):
+                cv2.resizeWindow(name, 600, 600)
+                resized_dict[name] = True
+            key = cv2.waitKey(1) & 0xFF # 1ms poll
+            return key
 
     def none_or_str(value):
         if value == 'None':
@@ -561,8 +579,6 @@ def consumer(queue:Queue):
                 img=img_hot
                 # img=np.abs((img.astype('float') / 255))
                 # img[:,:,1:2]=0
-            else:
-                img=1 - img.astype('float') / 255
             cv2.putText(img, pred_name, (1, 10), cv2.FONT_HERSHEY_PLAIN, .6, (255, 255, 255), 1)
             k=show_frame( img,'RoshamboCNN',resized_dict)
             if k==ord('x') or k==27: # 'x' or ESC quits

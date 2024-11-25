@@ -29,6 +29,7 @@ MIN_PRODUCER_FRAME_INTERVAL_MS=5.0 # inference takes about 3ms and normalization
         # passed since last frame was sent. That way, we make sure not to flood the consumer
 MAX_SHOWN_DVS_FRAME_RATE_HZ=15 # limits cv2 rendering of DVS frames to reduce loop latency for the producer
 FULLSCREEN=True # for kiosk demo autostart
+FULLSCREEN_ASPECT_RATIO=16./10 # set according to laptop screen
 HOT_COLOR_DISPLAY=True # to show DVS display using hot colors and not grayscale
 
 DATA_FOLDER = 'data' #'data'  # new samples stored here
@@ -61,7 +62,7 @@ MUSEUM_SCAN_FOR_RESTART_FILE=True # periodically check if there is a file named 
 MUSEUM_SLEEP_TIME_LOCAL="18:30" # local time every day to sleep computer, used by schedule to run the sleep command
 MUSEUM_WAKE_TIME_LOCAL="08:45" # time that computer wakes in local time (time of computer RTC clock, checked in bios or by timedatectl)
 MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S=10 # time to dim screen if no actions for this many seconds
-MUSEUM_DIMMED_SCREEN_BRIGHTNESS=.01 # how much to dim to, 0-1 range
+MUSEUM_DIMMED_SCREEN_BRIGHTNESS=0.01 # how much to dim to, 0-1 range
 
 # saving frames 
 SAVE_FRAMES_INTERVAL=10
