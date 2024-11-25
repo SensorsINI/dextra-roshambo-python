@@ -305,7 +305,7 @@ def consumer(queue:Queue):
 
         :returns: key code, check it with key==ord('x) for example
         """
-        with Timer('show_frame', show_hist=True):
+        with Timer('show_frame', show_hist=False):
             cv2.namedWindow(name, cv2.WINDOW_NORMAL|cv2.WINDOW_KEEPRATIO)
             if FULLSCREEN:
                 cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
