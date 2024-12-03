@@ -48,8 +48,10 @@ Recommand to use WSL2 and the vscode plugin https://marketplace.visualstudio.com
 
 ## Museum kiosk requirements
 For unattended operation, it is necessary that rtcwake can suspend the computer so that the user permissions allow it over reboots.
-* Put [9-userdev-input.rules](99-userdev-input.rules) into /etc/udev/rules.d
-* Put [power-state.conf](power-state.conf) into /etc/tmpfiles.d
+* Copy [9-userdev-input.rules](99-userdev-input.rules) into /etc/udev/rules.d
+* Copy [power-state.conf](power-state.conf) into /etc/tmpfiles.d
+* Copy [dextra.desktop](dextra.desktop) and [symbols/dextra-icon.png](symbols/dextra-icon.png) to ~/.local/share/applications (for desktop launcher) and to ~/.config/autostart, so login launches demo
+* Set up user for autologin
 These files may need editing for your username.
 
 # Running Dextra
