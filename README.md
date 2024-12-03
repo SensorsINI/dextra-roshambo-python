@@ -46,6 +46,12 @@ If you have trouble with pyaer, see https://github.com/duguyue100/pyaer. It shou
 
 Recommand to use WSL2 and the vscode plugin https://marketplace.visualstudio.com/items?itemName=thecreativedodo.usbip-connect to bind the USB port to WSL2 Ubuntu VM
 
+## Museum kiosk requirements
+For unattended operation, it is necessary that rtcwake can suspend the computer so that the user permissions allow it over reboots.
+* Put [9-userdev-input.rules](99-userdev-input.rules) into /etc/udev/rules.d
+* Put [power-state.conf](power-state.conf) into /etc/tmpfiles.d
+These files may need editing for your username.
+
 # Running Dextra
 
 Run _roshambo_; it uses multiprocessing to launch 2 subprocessees, _producer_ and _consumer_. (You can run these separately for testing.)
