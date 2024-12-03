@@ -586,8 +586,10 @@ def consumer(queue:Queue):
                 break
             elif k == ord('p'):
                 print_timing_info()
+                brightness.brighten_screen()
             elif k==ord(' ') or k==13: # space or enter makes demo movement
                 show_demo_sequence()
+                brightness.brighten_screen()
 
 
             # save time since frame sent from producer
@@ -595,7 +597,8 @@ def consumer(queue:Queue):
             with Timer('producer->consumer inference delay',delay=dt, show_hist=False):
                 pass
 
-    log.info('Ending consumer')    
+    log.info('Ending consumer')
+    brightness.brighten_screen() 
     
     # end of consumer()
 
