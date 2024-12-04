@@ -63,6 +63,7 @@ MUSEUM_SLEEP_TIME_LOCAL="18:30" # local time every day to sleep computer, used b
 MUSEUM_WAKE_TIME_LOCAL="08:45" # time that computer wakes in local time (time of computer RTC clock, checked in bios or by timedatectl)
 MUSEUM_SCREEN_DIM_NO_ACTIONS_TIMEOUT_S=10 # time to dim screen if no actions for this many seconds
 MUSEUM_DIMMED_SCREEN_BRIGHTNESS=0.01 # how much to dim to, 0-1 range
+MUSEUM_ACTIONS_DIR="actions" # where the actions csv files are put
 
 # saving frames 
 SAVE_FRAMES_INTERVAL=10

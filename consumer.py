@@ -397,9 +397,9 @@ def consumer(queue:Queue):
 
         if MUSEUM_LOGGING_FILE is None:
             return
-        if not os.path.exists(LOG_DIR):
-            os.mkdir(LOG_DIR)
-        museum_csv_actions_logging_file_name=os.path.join(LOG_DIR,MUSEUM_LOGGING_FILE+'-'+platform.node()+'-'+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
+        museum_actions_dir=os.path.join(LOG_DIR, MUSEUM_ACTIONS_DIR)
+        Path(museum_actions_dir).mkdir(parents=True, exist_ok=True)
+        museum_csv_actions_logging_file_name=os.path.join(museum_actions_dir, MUSEUM_LOGGING_FILE+'-'+platform.node()+'-'+datetime.now().strftime("-%Y-%m-%d-%H%M")+'.csv')
         with open(museum_csv_actions_logging_file_name,'w',newline='') as museum_csv_logging_file:
             museum_csv_writer=csv.writer(museum_csv_logging_file,dialect='excel')
             museum_csv_writer.writerow(['year','day_of_year','weekday','hour','minute', 'elapsed_minutes', 'actions'])
@@ -461,13 +461,11 @@ def consumer(queue:Queue):
         save_frames_folder=os.path.join(LOG_DIR,SAVE_FRAMES_STORAGE_LOCATION)
         if not os.path.exists(save_frames_folder):
             log.info(f"creating folders to hold sample frames that will be stored every {SAVE_FRAMES_INTERVAL} new classifications")
-            os.mkdir(save_frames_folder)
+            Path(save_frames_folder).mkdir(parents=True, exist_ok=True)
             log.info(f'made folder {save_frames_folder} to save sample frames')
             for symbol in SYMBOL_TO_PRED_DICT.keys():
                 symbol_folder_name=os.path.join(save_frames_folder,symbol)
-                if not os.path.exists(symbol_folder_name):
-                    os.mkdir(symbol_folder_name)
-                    log.info(f'made folder {symbol_folder_name} to hold sample classified frames')
+                Path(symbol_folder_name).mkdir(parents=True, exist_ok=True)
 
     log.info(f"scheduling 'I am alive' logging every MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES={MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES}m")
     schedule.every(MUSEUM_I_AM_ALIVE_LOG_INTERVAL_MINUTES).minutes.do(log_i_am_alive_message)
