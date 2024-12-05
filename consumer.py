@@ -447,7 +447,7 @@ def consumer(queue:Queue):
     show_frame(frame=img, name='RoshamboCNN',resized_dict=resized_dict)
     
     log.info('opening UDP port {} to receive frames from producer'.format(PORT))
-    socket.setdefaulttimeout(1) # set timeout to allow keyboard commands to cv window
+    socket.setdefaulttimeout(.1) # set timeout to allow keyboard input to cv2
     server_socket: socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     log.info(f'Using UDP buffer size {UDP_BUFFER_SIZE} to recieve the {IMSIZE}x{IMSIZE} images')
 
@@ -529,7 +529,7 @@ def consumer(queue:Queue):
                     k = cv2.waitKey(1) & 0xFF # 1ms poll
                     if k==ord('x'):
                         break
-                    elif k==ord(' '):
+                    elif k==ord(' ') or k==13: # space or enter
                         show_demo_sequence()
                     continue
 
