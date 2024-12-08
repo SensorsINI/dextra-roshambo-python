@@ -10,7 +10,7 @@ import matplotlib.ticker as plticker
 import datetime
 import time
 
-dir='logging'
+dir=os.path.join('logging/actions') # can't import globals_and_utils.py since it uses libs not always available
 
 def plot_data():
     data=np.empty((0,6),dtype=int) # year,day_of_year,weekday,hour,minute,museum_movements_this_hour
