@@ -1,9 +1,11 @@
 The Dextra rock-scissor-paper robot perception pipeline redone in python using pyaer and tensorflow.
 See also
+ * The Dextra page https://sensors.ini.ch/research/projects/dextra
  * The Dextra tendon driven hand paper and design https://sensorsini.github.io/dextra-robot-hand/
  * The Arduino firmware [https://github.com/SensorsINI/DextraRoshamboHand](https://github.com/SensorsINI/Dextra-robot-hand-firmware)
+ * The ROSHAMBO17 datawset https://docs.google.com/document/d/1rOltN_BaOTAMbP1chzFZxPjN24eTdbzuCrCM4S2o6qA/edit?tab=t.0 
 
-The pretrained network is a 16-bit quantized weight and state CNN.
+The pretrained network is a 16-bit quantized weight and state CNN trained on the dataset 
 
 ## Requirements
 
