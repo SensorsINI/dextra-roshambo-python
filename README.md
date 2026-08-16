@@ -6,9 +6,19 @@ See also:
 - [Dextra tendon-driven hand](https://sensorsini.github.io/dextra-robot-hand/)
 - [Arduino firmware](https://github.com/SensorsINI/Dextra-robot-hand-firmware)
 - [jAER](https://jaerproject.org)
-- [ROSHAMBO17 dataset](https://docs.google.com/document/d/1rOltN_BaOTAMbP1chzFZxPjN24eTdbzuCrCM4S2o6qA/edit?tab=t.0)
+- [ROSHAMBO17 dataset](https://docs.google.com/document/d/1rOltN_BaOTAMbP1chzFZxPjN24eTdbzuCrCM4S2o6qA/edit?tab=t.0#heading=h.ssxrnpj31kip)
 
-The pretrained network is a 16-bit quantized CNN trained on that dataset.
+The 16-bit quantized CNN was trained on ROSHAMBO17. Cite:
+
+I.-A. Lungu, F. Corradi, and T. Delbruck, “Live Demonstration: Convolutional Neural Network Driven by Dynamic Vision Sensor Playing RoShamBo,” in *2017 IEEE International Symposium on Circuits and Systems (ISCAS)*, Baltimore, MD, USA, 2017. [doi:10.1109/ISCAS.2017.8050403](https://doi.org/10.1109/ISCAS.2017.8050403)
+
+## CNN model
+
+Weights in git are `model/numpy_weights/*.npy` (16-bit quantized kernels/biases). On every `consumer.py` start, `load_latest_model_convert_to_tflite()` builds a Keras `RoshamboNet`, writes a SavedModel to `roshambo-model/`, converts TFLite from the SavedModel in `model/` (`saved_model.pb` + `variables/`), and writes `model/dextra_roshambo.tflite` for the interpreter.
+
+`roshambo-model/` and `model/dextra_roshambo.tflite` are generated; they are gitignored. Do not commit them. Keep `model/numpy_weights/` and `model/saved_model.pb` (plus `model/variables/`) in the repo — those are the conversion source.
+
+The network was trained on [ROSHAMBO17](https://docs.google.com/document/d/1rOltN_BaOTAMbP1chzFZxPjN24eTdbzuCrCM4S2o6qA/edit?tab=t.0#heading=h.ssxrnpj31kip). Citation: [Lungu, Corradi, and Delbruck, ISCAS 2017](https://doi.org/10.1109/ISCAS.2017.8050403).
 
 ## Requirements
 
