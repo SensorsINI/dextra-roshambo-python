@@ -1,14 +1,23 @@
-numpy
-matplotlib
-pyserial
-engineering_notation
-pyyaml
-opencv-python
-# torch
-# tensorflow>= 2.5.0,<2.6.0 # requires python==3.9
-tensorflow~= 2.5.0,<2.6.0 # requires python==3.9
+# Python 3.9 only. TensorFlow 2.5.x (required by the pretrained Roshambo CNN) has no
+# wheels for 3.10+. Do not upgrade TensorFlow.
+#
+# protobuf must stay on 3.20.x: newer protobuf raises
+# "Descriptors cannot be created directly" on import tensorflow.
+#
+# pyaer is not listed here. It is only needed for producer.py (live DAVIS via libcaer).
+# consumer.py default UDP path and --jaer-mmap do not require it.
+
+tensorflow==2.5.2
 keras==2.5.0rc0
-# keras==2.5.0
-tensorflow-model-optimization # pip install --user --upgrade
-pyaer # needs libcaer; can be installed with  sudo apt-get install libcaer-dev, otherewise see https://gitlab.com/inivation/dv/libcaer; see https://github.com/duguyue100/pyaer
-schedule # for log rotating 
+protobuf==3.20.3
+numpy==1.19.5
+h5py==3.1.0
+typing-extensions==3.7.4.3
+six==1.15.0
+opencv-python==4.9.0.80
+matplotlib==3.5.1
+pyserial==3.5
+engineering-notation==0.10.0
+pyyaml==6.0.0
+schedule==1.2.2
+tensorflow-model-optimization==0.7.3

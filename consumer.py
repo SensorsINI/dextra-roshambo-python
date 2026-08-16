@@ -33,6 +33,7 @@ from tensorflow.python.keras import Input
 
 from RoshamboNet import RoshamboNet
 from globals_and_utils import *
+from jaer_shm import DEFAULT_TCP as JAER_DEFAULT_TCP, JaerFrameShm
 from engineering_notation import EngNumber as eng  # only from pip
 import collections
 from pathlib import Path
@@ -317,6 +318,8 @@ def consumer(queue: Queue):
     serial_port_instance = None
     last_frame_number = 0
     resized_dict = {}
+    windowed = False  # set from --windowed after argparse
+    windowed_size = 640
     # logging
     museum_csv_actions_logging_file_name = None
     museum_movements_since_last_log = 0
@@ -350,8 +353,9 @@ def consumer(queue: Queue):
         :returns: key code, check it with key==ord('x) for example
         """
         with Timer("show_frame", show_hist=False):
+            fullscreen = FULLSCREEN and not windowed
             cv2.namedWindow(name, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
-            if FULLSCREEN:
+            if fullscreen:
                 cv2.setWindowProperty(
                     name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN
                 )
@@ -366,15 +370,13 @@ def consumer(queue: Queue):
 
                 new_fr[:, x_cen : x_cen + IMSIZE] = frame
                 frame = new_fr
-            # if FULLSCREEN:
-            #     cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
             # https://stackoverflow.com/questions/43391205/add-padding-to-images-to-get-them-into-the-same-shape
             # https://docs.opencv.org/4.5.3/d3/df2/tutorial_py_basic_ops.html#:%7E:text=making%20borders%20for%20images%20(padding)
             # frame=cv2.copyMakeBorder(frame,0,0,24,24,cv2.BORDER_CONSTANT,0)  # very slow
 
             cv2.imshow(name, frame)
-            if not FULLSCREEN and not (name in resized_dict):
-                cv2.resizeWindow(name, 600, 600)
+            if not fullscreen and not (name in resized_dict):
+                cv2.resizeWindow(name, windowed_size, windowed_size)
                 resized_dict[name] = True
             key = cv2.waitKey(1) & 0xFF  # 1ms poll
             return key
@@ -529,8 +531,30 @@ def consumer(queue: Queue):
         default=SERIAL_PORT,
         help="serial port, e.g. /dev/ttyUSB0 or None to not user port",
     )
+    parser.add_argument(
+        "--jaer-mmap",
+        type=none_or_str,
+        default=None,
+        help="jAER SharedMemoryDVSFrameSender mmap file (skip UDP producer). "
+        "Typical: /tmp/jaer_dvs_frames.mmap (Linux) or %%TEMP%%\\jaer_dvs_frames.mmap (Windows)",
+    )
+    parser.add_argument(
+        "--jaer-tcp",
+        type=none_or_str,
+        default=JAER_DEFAULT_TCP,
+        help="jAER control TCP host:port (used with --jaer-mmap). "
+        "Pass None to poll mmap seq only without TCP",
+    )
+    parser.add_argument(
+        "--windowed",
+        action="store_true",
+        help="show inference in a 640x640 window instead of fullscreen (kiosk default)",
+    )
 
     args = parser.parse_args()
+    windowed = args.windowed
+    if windowed:
+        log.info("showing inference in 640x640 window (--windowed)")
 
     log.info("starting up, showing window")
     img = np.zeros([64, 64], dtype=np.uint8)
@@ -542,15 +566,25 @@ def consumer(queue: Queue):
     )
     show_frame(frame=img, name="RoshamboCNN", resized_dict=resized_dict)
 
-    log.info("opening UDP port {} to receive frames from producer".format(PORT))
-    socket.setdefaulttimeout(0.1)  # set timeout to allow keyboard input to cv2
-    server_socket: socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    log.info(
-        f"Using UDP buffer size {UDP_BUFFER_SIZE} to recieve the {IMSIZE}x{IMSIZE} images"
-    )
+    jaer_shm = None
+    server_socket = None
+    if args.jaer_mmap:
+        log.info(
+            f"receiving DVS frames from jAER mmap {args.jaer_mmap} "
+            f"(tcp={args.jaer_tcp})"
+        )
+        jaer_shm = JaerFrameShm(args.jaer_mmap, tcp=args.jaer_tcp)
+        jaer_shm.open()
+    else:
+        log.info("opening UDP port {} to receive frames from producer".format(PORT))
+        socket.setdefaulttimeout(0.1)  # set timeout to allow keyboard input to cv2
+        server_socket: socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        log.info(
+            f"Using UDP buffer size {UDP_BUFFER_SIZE} to recieve the {IMSIZE}x{IMSIZE} images"
+        )
 
-    address = ("", PORT)
-    server_socket.bind(address)
+        address = ("", PORT)
+        server_socket.bind(address)
     load_latest_model_convert_to_tflite()
     interpreter, input_details, output_details = load_tflite_model(MODEL_DIR)
 
@@ -633,25 +667,41 @@ def consumer(queue: Queue):
 
             with Timer("overall consumer loop", numpy_file=None, show_hist=False):
 
-                with Timer("recieve UDP"):
-                    try:
-                        receive_data = server_socket.recv(UDP_BUFFER_SIZE)
-                    except socket.timeout:
-                        log.debug("timeout for frame from DVS")
-                        k = cv2.waitKey(1) & 0xFF  # 1ms poll
-                        if k == ord("x"):
-                            break
-                        elif k == ord(" ") or k == 13:  # space or enter
-                            show_demo_sequence()
-                        continue
-
-                with Timer("unpickle and normalize/reshape"):
-                    (frame_number, timestamp, img) = pickle.loads(receive_data)
+                with Timer("receive frame"):
+                    if jaer_shm is not None:
+                        got = jaer_shm.next_frame(
+                            last_seq=last_frame_number, timeout_s=0.1
+                        )
+                        if got is None:
+                            log.debug("timeout for frame from jAER")
+                            k = cv2.waitKey(1) & 0xFF  # 1ms poll
+                            if k == ord("x"):
+                                break
+                            elif k == ord(" ") or k == 13:  # space or enter
+                                show_demo_sequence()
+                            continue
+                        frame_number, timestamp, img = got
+                    else:
+                        try:
+                            receive_data = server_socket.recv(UDP_BUFFER_SIZE)
+                        except socket.timeout:
+                            log.debug("timeout for frame from DVS")
+                            k = cv2.waitKey(1) & 0xFF  # 1ms poll
+                            if k == ord("x"):
+                                break
+                            elif k == ord(" ") or k == 13:  # space or enter
+                                show_demo_sequence()
+                            continue
+                        with Timer("unpickle and normalize/reshape"):
+                            (frame_number, timestamp, img) = pickle.loads(receive_data)
+                    if img is not None and img.shape != (IMSIZE, IMSIZE):
+                        img = cv2.resize(
+                            img, (IMSIZE, IMSIZE), interpolation=cv2.INTER_NEAREST
+                        )
                     dropped_frames = frame_number - last_frame_number - 1
                     if dropped_frames > 0:
                         log.warning(f"Dropped {dropped_frames} frames from producer")
                     last_frame_number = frame_number
-                    # img = (1./255)*np.reshape(img, [IMSIZE, IMSIZE,1])
                 with Timer(
                     "run CNN", numpy_file=None, show_hist=SHOW_STATISTICS_AT_END
                 ):
@@ -742,6 +792,13 @@ def consumer(queue: Queue):
     finally:
         log.info("Ending consumer")
         brightness.brighten_screen()
+        if jaer_shm is not None:
+            jaer_shm.close()
+        if server_socket is not None:
+            try:
+                server_socket.close()
+            except OSError:
+                pass
 
     # end of consumer()
 

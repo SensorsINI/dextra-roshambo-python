@@ -1,3 +1,4 @@
+.venv/
 **/__pycache__/*
 sample_frames/*.png
 logging/*
@@ -5,3 +6,4 @@ test_logging.py
 roshambo-model/variables/variables.data-00000-of-00001
 roshambo-model/variables/variables.index
 roshambo-model/saved_model.pb
+gebruiksaanwijzing-1340670-voltcraft-4500-pro-de-energiekostenmeter.pdf
